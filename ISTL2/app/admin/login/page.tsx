@@ -13,8 +13,19 @@ export default function AdminLogin() {
   const router = useRouter();
 
   useEffect(() => {
-    // Generate CSRF token
-    setCsrfToken(crypto.randomUUID());
+    // Generate CSRF token - use a more compatible approach
+    const generateToken = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      // Fallback for older browsers
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+    setCsrfToken(generateToken());
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -13,7 +13,8 @@ const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 const ADMIN_CREDENTIALS = {
   username: process.env.ADMIN_USERNAME || "admin",
   passwordHash: process.env.ADMIN_PASSWORD_HASH || 
-    crypto.createHash('sha256').update(process.env.ADMIN_PASSWORD || "admin123").digest('hex')
+    crypto.createHash('sha256').update(process.env.ADMIN_PASSWORD || "admin123").digest('hex'),
+  password: process.env.ADMIN_PASSWORD || "admin123" // Store plain password for verification
 };
 
 // Session storage (in production, use Redis or database)
@@ -239,7 +240,7 @@ export function authenticateAdmin(username: string, password: string, req: NextR
   
   // Verify credentials
   if (username === ADMIN_CREDENTIALS.username && 
-      verifyPassword(password, ADMIN_CREDENTIALS.passwordHash, '')) {
+      password === ADMIN_CREDENTIALS.password) {
     
     // Record successful login
     recordLoginAttempt(clientIp, true);

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     // CSRF protection
-    const csrfToken = req.headers.get('x-csrf-token');
+    const csrfToken = req.headers.get('x-csrf-token') || req.headers.get('X-CSRF-Token');
     if (!csrfToken) {
       return NextResponse.json({ 
         success: false, 
