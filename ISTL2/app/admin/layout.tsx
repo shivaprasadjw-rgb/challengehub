@@ -17,13 +17,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     // Check if admin is authenticated
-    const authStatus = localStorage.getItem("adminAuthenticated");
-    if (!authStatus) {
+    const sessionId = localStorage.getItem("adminSessionId");
+    if (!sessionId) {
       router.push("/admin/login");
       return;
     }
 
-    setIsAuthenticated(true);
+    setIsAuthenticated(!!sessionId);
     setMounted(true);
   }, [pathname, router]);
 
