@@ -117,7 +117,7 @@ function validateExcelData(data: any[]): ValidationResult {
 export async function POST(req: NextRequest) {
   try {
     const auth = requireAdminAuth(req);
-    if (!auth.ok || !auth.username) {
+    if (!auth.ok) {
       return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
     }
 
@@ -180,8 +180,8 @@ export async function POST(req: NextRequest) {
         mediaConsentAcknowledged: true,
         paymentScreenshot: participant.paymentScreenshot,
         transactionId: participant.transactionId,
-        assignedRound: { label: "Round A", roundNumber: 0 },
-        createdAt: new Date().toISOString()
+        registrationDate: new Date().toISOString(),
+        status: 'Confirmed'
       };
 
       await appendRegistration(registration);
@@ -190,12 +190,12 @@ export async function POST(req: NextRequest) {
 
     // Log the action
     await appendAudit({
-      action: 'ADD',
+      action: 'bulk_upload',
       resourceType: 'registration',
       resourceId: `${tournamentId}-bulk-${Date.now()}`,
       adminUser: auth.username,
-      details: { message: `Bulk uploaded ${addedParticipants.length} participants to tournament ${tournamentId}` },
-      tournamentId: tournamentId
+      details: `Bulk uploaded ${addedParticipants.length} participants to tournament ${tournamentId}`,
+      timestamp: new Date().toISOString()
     });
 
     return NextResponse.json({

@@ -208,6 +208,32 @@ const Info = ({ className = "h-4 w-4" }: { className?: string }) => (
 );
 
 export default function TournamentProgression({ tournamentId, onClose }: TournamentProgressionProps) {
+  // Validate required props
+  if (!tournamentId || typeof tournamentId !== 'string') {
+    console.error('TournamentProgression: tournamentId is required and must be a string');
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Invalid Tournament ID</h2>
+          <p className="text-gray-600 mb-4">A valid tournament ID is required to display progression data.</p>
+          <Button onClick={onClose} variant="secondary" className="w-full">Close</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!onClose || typeof onClose !== 'function') {
+    console.error('TournamentProgression: onClose is required and must be a function');
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Invalid Close Function</h2>
+          <p className="text-gray-600 mb-4">A valid close function is required.</p>
+        </div>
+      </div>
+    );
+  }
+
   const [selectedRound, setSelectedRound] = useState<string>("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [progression, setProgression] = useState<ProgressionData | null>(null);
@@ -217,20 +243,47 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
 
   // Generate CSRF token on component mount
   useEffect(() => {
-    setCsrfToken(crypto.randomUUID());
+    try {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        setCsrfToken(crypto.randomUUID());
+      } else {
+        // Fallback for environments without crypto.randomUUID
+        const fallbackToken = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+        setCsrfToken(fallbackToken);
+      }
+    } catch (error) {
+      console.error('Error generating CSRF token:', error);
+      // Fallback token
+      setCsrfToken('fallback-token-' + Date.now());
+    }
   }, []);
 
   // Get session ID from localStorage
   const getSessionId = (): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('adminSessionId');
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const sessionId = localStorage.getItem('adminSessionId');
+        return sessionId && typeof sessionId === 'string' && sessionId.trim() !== '' ? sessionId : null;
+      }
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
     }
     return null;
   };
 
   const fetchProgression = async () => {
+    if (!tournamentId || typeof tournamentId !== 'string') {
+      console.error('fetchProgression: Invalid tournamentId');
+      setMessage({ type: 'error', text: 'Invalid tournament ID provided' });
+      return;
+    }
+
     try {
-      const sessionId = localStorage.getItem("adminSessionId");
+      const sessionId = getSessionId();
       if (!sessionId) {
         setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
         return;
@@ -244,39 +297,57 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
 
       if (response.ok) {
         const data = await response.json();
-        setProgression(data.progression);
-        setMatches(data.matches);
+        setProgression(data.progression || null);
+        setMatches(data.matches || []);
         setMessage(null); // Clear previous messages
       } else {
         const errorData = await response.json();
         setMessage({ type: 'error', text: errorData.error || 'Failed to fetch progression data' });
+        // Ensure matches is always an array even on error
+        setMatches([]);
       }
     } catch (error: any) {
       console.error('Error fetching progression:', error);
       setMessage({ type: 'error', text: 'Failed to fetch progression data' });
+      // Ensure matches is always an array even on error
+      setMatches([]);
     }
   };
 
   const getAvailableRounds = (): string[] => {
-    if (progression?.rounds && progression.rounds.length > 0) {
-      return progression.rounds;
+    try {
+      if (progression?.rounds && Array.isArray(progression.rounds) && progression.rounds.length > 0) {
+        // Filter out any invalid round values
+        return progression.rounds.filter(round => round && typeof round === 'string' && round.trim() !== '');
+      }
+    } catch (error) {
+      console.error('Error getting available rounds:', error);
     }
+    
     // Fallback to standard tournament rounds
     return ["Round of 32", "Round of 16", "Quarterfinals", "Semifinals", "Final", "3rd Place Match"];
   };
 
   const handleRoundChange = (round: string) => {
+    if (!round || typeof round !== 'string') {
+      setSelectedRound("");
+      setMatches([]);
+      return;
+    }
+    
     setSelectedRound(round);
-    if (progression) {
-      const roundMatches = progression.matches.filter(m => m.round === round);
-      setMatches(roundMatches);
+    if (progression && progression.matches && Array.isArray(progression.matches)) {
+      const roundMatches = progression.matches.filter(m => m && m.round === round);
+      setMatches(roundMatches || []);
+    } else {
+      setMatches([]);
     }
   };
 
   const populateRound32Matches = async () => {
     setLoading(true);
     try {
-      const sessionId = localStorage.getItem("adminSessionId");
+      const sessionId = getSessionId();
       if (!sessionId) {
         setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
         return;
@@ -317,7 +388,7 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
   const populateRound16Matches = async () => {
     setLoading(true);
     try {
-      const sessionId = localStorage.getItem("adminSessionId");
+      const sessionId = getSessionId();
       if (!sessionId) {
         setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
         return;
@@ -357,7 +428,7 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
   const fixProgression = async () => {
     setLoading(true);
     try {
-      const sessionId = localStorage.getItem("adminSessionId");
+      const sessionId = getSessionId();
       if (!sessionId) {
         setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
         return;
@@ -397,7 +468,7 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
   const validateIntegrity = async () => {
     setLoading(true);
     try {
-      const sessionId = localStorage.getItem("adminSessionId");
+      const sessionId = getSessionId();
       if (!sessionId) {
         setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
         return;
@@ -417,7 +488,11 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
 
       if (response.ok) {
         const data = await response.json();
-        setMessage({ type: 'info', text: data.message || 'Data integrity check completed' });
+        setMessage({ type: 'success', text: data.message || 'Tournament integrity validated successfully!' });
+        
+        setTimeout(() => {
+          fetchProgression();
+        }, 500);
       } else {
         const errorData = await response.json();
         setMessage({ type: 'error', text: errorData.error || 'Failed to validate integrity' });
@@ -510,11 +585,21 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
     }
   };
 
+  // Ensure matches is always an array before rendering
+  const safeMatches = Array.isArray(matches) ? matches : [];
+  const matchesCount = safeMatches.length;
+
   useEffect(() => {
-    fetchProgression();
+    if (tournamentId && typeof tournamentId === 'string') {
+      fetchProgression();
+    }
   }, [tournamentId]);
 
   const getMessageIcon = (type: string) => {
+    if (!type || typeof type !== 'string') {
+      return <Info className="h-4 w-4" />;
+    }
+    
     switch (type) {
       case 'success': return <CheckCircle className="h-4 w-4" />;
       case 'error': return <AlertCircle className="h-4 w-4" />;
@@ -524,6 +609,10 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
   };
 
   const getMessageColor = (type: string) => {
+    if (!type || typeof type !== 'string') {
+      return 'border-blue-200 bg-blue-50 text-blue-800';
+    }
+    
     switch (type) {
       case 'success': return 'border-green-200 bg-green-50 text-green-800';
       case 'error': return 'border-red-200 bg-red-50 text-red-800';
@@ -557,7 +646,7 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
               <CardContent className="space-y-3">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Select Round:</label>
-                  <Select value={selectedRound} onValueChange={handleRoundChange}>
+                  <Select value={selectedRound || ""} onValueChange={handleRoundChange}>
                     <SelectItem value="">Choose a round...</SelectItem>
                     {getAvailableRounds().map((round) => (
                         <SelectItem key={round} value={round}>
@@ -642,17 +731,17 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Current Round:</span>
-                    <Badge variant="info">{progression.currentRound || 'Not Started'}</Badge>
+                    <Badge variant="info">{progression.currentRound && progression.currentRound.trim() !== '' ? progression.currentRound : 'Not Started'}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Status:</span>
-                    <Badge variant={progression.status === 'active' ? 'default' : 'info'}>
-                      {progression.status || 'Unknown'}
+                    <Badge variant={progression.status && progression.status === 'active' ? 'default' : 'info'}>
+                      {progression.status && progression.status.trim() !== '' ? progression.status : 'Unknown'}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Total Rounds:</span>
-                    <Badge variant="default">{progression.rounds?.length || 0}</Badge>
+                    <Badge variant="default">{Array.isArray(progression.rounds) ? progression.rounds.length : 0}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -664,33 +753,33 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Matches for {selectedRound || 'Select a Round'}
-                  {matches.length > 0 && (
+                  Matches for {selectedRound && selectedRound.trim() !== '' ? selectedRound : 'Select a Round'}
+                  {matchesCount > 0 && (
                     <Badge variant="info" className="ml-2">
-                      {matches.length} matches
+                      {matchesCount} matches
                     </Badge>
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {selectedRound ? (
-                  matches.length > 0 ? (
+                {selectedRound && selectedRound.trim() !== '' ? (
+                  matchesCount > 0 ? (
                     <div className="space-y-3">
-                      {matches.map((match) => (
-                        <div key={match.id} className="border rounded-lg p-3">
+                      {safeMatches.map((match) => (
+                        <div key={match.id || `match-${Math.random()}`} className="border rounded-lg p-3">
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm font-medium text-gray-600">
-                              Match {match.id}
+                              Match {match.id || 'Unknown'}
                             </span>
-                            <Badge variant={match.isCompleted ? 'default' : 'info'}>
-                              {match.isCompleted ? 'Completed' : 'Pending'}
+                            <Badge variant={match.isCompleted === true ? 'default' : 'info'}>
+                              {match.isCompleted === true ? 'Completed' : 'Pending'}
                             </Badge>
                           </div>
                           <div className="space-y-1">
                             <div className="text-sm">
-                              <span className="font-medium">Players:</span> {match.players.join(' vs ')}
+                              <span className="font-medium">Players:</span> {Array.isArray(match.players) ? match.players.join(' vs ') : 'Unknown'}
                             </div>
-                            {match.winner && (
+                            {match.winner && match.winner.trim() !== '' && (
                               <div className="text-sm">
                                 <span className="font-medium">Winner:</span> {match.winner}
                               </div>
@@ -719,11 +808,11 @@ export default function TournamentProgression({ tournamentId, onClose }: Tournam
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-gray-600 space-y-1">
-                  <div>Tournament ID: {tournamentId}</div>
-                  <div>Selected Round: {selectedRound || 'None'}</div>
-                  <div>Matches Count: {matches.length}</div>
-                  <div>Progression Status: {progression?.status || 'Unknown'}</div>
-                  <div>CSRF Token: {csrfToken.substring(0, 8)}...</div>
+                  <div>Tournament ID: {tournamentId || 'Not specified'}</div>
+                  <div>Selected Round: {selectedRound && selectedRound.trim() !== '' ? selectedRound : 'None'}</div>
+                  <div>Matches Count: {matchesCount}</div>
+                  <div>Progression Status: {progression?.status && progression.status.trim() !== '' ? progression.status : 'Unknown'}</div>
+                  <div>CSRF Token: {csrfToken && csrfToken.length >= 8 ? csrfToken.substring(0, 8) + '...' : 'Not set'}</div>
                 </div>
               </CardContent>
             </Card>

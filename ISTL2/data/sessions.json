@@ -1,1 +1,106 @@
-{}
+{
+  "e27800edc28fdc01c0d7ab03d8a60cc2d1090ee71f1e29dae5ae4aef093420cb": {
+    "id": "e27800edc28fdc01c0d7ab03d8a60cc2d1090ee71f1e29dae5ae4aef093420cb",
+    "username": "admin",
+    "createdAt": 1755994119065,
+    "expiresAt": 1756080519065,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "fd9519c6a28c1ddab99000be531ffca1004e707f598c89928db0a28fd6820fd5": {
+    "id": "fd9519c6a28c1ddab99000be531ffca1004e707f598c89928db0a28fd6820fd5",
+    "username": "admin",
+    "createdAt": 1755994272920,
+    "expiresAt": 1756080672920,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "ba3391e88e30868cb4f32576b243a715572946b16acff0394fb2d417e1e66f45": {
+    "id": "ba3391e88e30868cb4f32576b243a715572946b16acff0394fb2d417e1e66f45",
+    "username": "admin",
+    "createdAt": 1755994286743,
+    "expiresAt": 1756080686743,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "69f85c46f7b8358d26e27992a96b8f87f518d677fa238145a6a12d6e4c39fd79": {
+    "id": "69f85c46f7b8358d26e27992a96b8f87f518d677fa238145a6a12d6e4c39fd79",
+    "username": "admin",
+    "createdAt": 1755994531476,
+    "expiresAt": 1756080931476,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "5f947797b6634fde70e572cf16969c1decbbf139d99027c2baa339201b437f9a": {
+    "id": "5f947797b6634fde70e572cf16969c1decbbf139d99027c2baa339201b437f9a",
+    "username": "admin",
+    "createdAt": 1755994848998,
+    "expiresAt": 1756081248998,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "2c1e78feed05615152a641821add0f91b0044833b743a1e201c71aa28a8569dd": {
+    "id": "2c1e78feed05615152a641821add0f91b0044833b743a1e201c71aa28a8569dd",
+    "username": "admin",
+    "createdAt": 1755996247047,
+    "expiresAt": 1756082647047,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "f98818fd715876dfc154576bde1cea113537993ec84c70b2e74a59d20ffecc65": {
+    "id": "f98818fd715876dfc154576bde1cea113537993ec84c70b2e74a59d20ffecc65",
+    "username": "admin",
+    "createdAt": 1755996368857,
+    "expiresAt": 1756082768857,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "e2aa706f40b79844d36c4ac04c4f11b722379d939d2d5b6ff6b8e19c68226fb5": {
+    "id": "e2aa706f40b79844d36c4ac04c4f11b722379d939d2d5b6ff6b8e19c68226fb5",
+    "username": "admin",
+    "createdAt": 1755996749778,
+    "expiresAt": 1756083149778,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "8c65be74f7bed6e7bf2a8a655f278a82cad837a6fc1cad2b7c157b072235868b": {
+    "id": "8c65be74f7bed6e7bf2a8a655f278a82cad837a6fc1cad2b7c157b072235868b",
+    "username": "admin",
+    "createdAt": 1755996757183,
+    "expiresAt": 1756083157183,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "ad551eaeffac3740057f983610feb8a14ab268f7fe11d907dac617467682575d": {
+    "id": "ad551eaeffac3740057f983610feb8a14ab268f7fe11d907dac617467682575d",
+    "username": "admin",
+    "createdAt": 1755996902094,
+    "expiresAt": 1756083302094,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "fcad4775172aa58924777d5aa74b1d0b4ef35b301f3ead9669838aa5489c3ff6": {
+    "id": "fcad4775172aa58924777d5aa74b1d0b4ef35b301f3ead9669838aa5489c3ff6",
+    "username": "admin",
+    "createdAt": 1755999191721,
+    "expiresAt": 1756085591721,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0"
+  },
+  "0515983ae9acd88af3d928faf53259f9f443a1beb6cfd6c744336fb2bd37bfed": {
+    "id": "0515983ae9acd88af3d928faf53259f9f443a1beb6cfd6c744336fb2bd37bfed",
+    "username": "admin",
+    "createdAt": 1756057155484,
+    "expiresAt": 1756143555484,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+  },
+  "248753178af5af56fc313aac978797e1e0af08047e2c30308385ef4f5d7ed453": {
+    "id": "248753178af5af56fc313aac978797e1e0af08047e2c30308385ef4f5d7ed453",
+    "username": "admin",
+    "createdAt": 1756058423949,
+    "expiresAt": 1756144823949,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+  }
+}
