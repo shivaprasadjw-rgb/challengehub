@@ -30,9 +30,9 @@ export default function AdminRegistrations({ params }: { params: { tid: string }
   const list = useMemo(() => registrations.filter(r => r.tournamentId === tid), [registrations, tid]);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("adminAuthenticated");
+    const sessionId = localStorage.getItem("adminSessionId");
     const username = localStorage.getItem("adminUsername");
-    if (!isAuthenticated || !username) {
+    if (!sessionId || !username) {
       router.push("/admin/login");
       return;
     }
@@ -83,11 +83,17 @@ export default function AdminRegistrations({ params }: { params: { tid: string }
   const submitAdd = async () => {
     setNotice(null);
     try {
+      const sessionId = localStorage.getItem("adminSessionId");
+      if (!sessionId) {
+        setNotice('No active session found. Please log in again.');
+        return;
+      }
+
       const res = await fetch(`/api/admin/registrations/${encodeURIComponent(tid)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-user': adminUsername,
+          'x-session-id': sessionId,
         },
         body: JSON.stringify({
           fullName: form.fullName,
@@ -125,11 +131,17 @@ export default function AdminRegistrations({ params }: { params: { tid: string }
     if (!editingId) return;
     setNotice(null);
     try {
+      const sessionId = localStorage.getItem("adminSessionId");
+      if (!sessionId) {
+        setNotice('No active session found. Please log in again.');
+        return;
+      }
+
       const res = await fetch(`/api/admin/registrations/${encodeURIComponent(tid)}?id=${encodeURIComponent(editingId)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-user': adminUsername,
+          'x-session-id': sessionId,
         },
         body: JSON.stringify(form),
       });
@@ -198,7 +210,7 @@ export default function AdminRegistrations({ params }: { params: { tid: string }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuthenticated");
+            localStorage.removeItem("adminSessionId");
     localStorage.removeItem("adminUsername");
     router.push("/admin/login");
   };

@@ -8,9 +8,9 @@ export default function AdminIndex() {
 
   useEffect(() => {
     // Check if admin is authenticated
-    const isAuthenticated = localStorage.getItem("adminAuthenticated");
+    const sessionId = localStorage.getItem("adminSessionId");
     
-    if (isAuthenticated) {
+    if (sessionId) {
       router.push("/admin/dashboard");
     } else {
       router.push("/admin/login");
