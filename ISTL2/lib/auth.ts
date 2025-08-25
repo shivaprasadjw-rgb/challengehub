@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "./db"
 import bcrypt from "bcryptjs"
+import { UserRole, UserStatus, MembershipRole } from "@prisma/client"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -29,7 +30,7 @@ export const authOptions: NextAuthOptions = {
           }
         })
 
-        if (!user || user.status !== 'ACTIVE') {
+        if (!user || user.status !== UserStatus.ACTIVE) {
           return null
         }
 
@@ -38,6 +39,9 @@ export const authOptions: NextAuthOptions = {
           if (!isPasswordValid) {
             return null
           }
+        } else {
+          // Handle users without passwordHash if needed, e.g., OAuth users
+          return null
         }
 
         return {
@@ -64,8 +68,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        session.user.role = token.role
-        session.user.organizerIds = token.organizerIds
+        session.user.role = token.role as UserRole
+        session.user.organizerIds = token.organizerIds as { id: string; slug: string; role: MembershipRole }[]
       }
       return session
     }
@@ -79,8 +83,8 @@ export const authOptions: NextAuthOptions = {
   }
 }
 
-// Helper functions for role-based access control
-export function requireRole(role: string) {
+// Helper functions for role-based access control (simplified for now)
+export function requireRole(role: UserRole) {
   return function(req: any, res: any, next: any) {
     if (req.session?.user?.role !== role) {
       return res.status(403).json({ error: 'Insufficient permissions' })
@@ -96,7 +100,7 @@ export function requireOrganizerAccess(organizerSlug: string) {
       return res.status(401).json({ error: 'Authentication required' })
     }
     
-    if (user.role === 'SUPER_ADMIN') {
+    if (user.role === UserRole.SUPER_ADMIN) {
       return next()
     }
     
