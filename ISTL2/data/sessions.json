@@ -126,5 +126,13 @@
     "expiresAt": 1756146492240,
     "ip": "::1",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+  },
+  "6d6fce5a954c3fd7c2414d5cf61197ab2becaf2a7444ec9309a78fa8db7e7164": {
+    "id": "6d6fce5a954c3fd7c2414d5cf61197ab2becaf2a7444ec9309a78fa8db7e7164",
+    "username": "admin",
+    "createdAt": 1756060917284,
+    "expiresAt": 1756147317284,
+    "ip": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
   }
 }

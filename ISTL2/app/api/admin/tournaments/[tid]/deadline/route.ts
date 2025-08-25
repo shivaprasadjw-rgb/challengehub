@@ -19,7 +19,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Either deadline or date must be provided' }, { status: 400 });
     }
 
-    const result = await updateTournamentDeadline(params.tid, deadline, date, auth.username!);
+    const result = await updateTournamentDeadline(params.tid, deadline, date, auth.username!);.\istl2-backup.bat
     
     if (result) {
       // Log the action
