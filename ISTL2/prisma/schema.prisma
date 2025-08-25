@@ -1,0 +1,306 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core User Management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  passwordHash String?
+  role      UserRole @default(ORG_USER)
+  status    UserStatus @default(ACTIVE)
+  emailVerified DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizerMemberships UserOrganizer[]
+  organizerApplications OrganizerApplication[]
+  organizerApplicationsDecided OrganizerApplication[] @relation("ApplicationDecider")
+  ownedOrganizers Organizer[] @relation("OrganizerOwner")
+  registrations       Registration[]
+  auditLogs           AuditLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ORG_USER
+  JUDGE
+  PLAYER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+// Organizer Management
+model Organizer {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  status    OrganizerStatus @default(PENDING)
+  ownerUserId String
+  contact   Json     // { email, phone, address }
+  oneTimeFeePaidAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner           User     @relation("OrganizerOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  members         UserOrganizer[]
+  venues          Venue[]
+  tournaments     Tournament[]
+  judges          Judge[]
+  payments        Payment[]
+  applications    OrganizerApplication[]
+  auditLogs       AuditLog[]
+
+  @@map("organizers")
+}
+
+enum OrganizerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+// Organizer Application
+model OrganizerApplication {
+  id        String   @id @default(cuid())
+  userId    String
+  organizerId String
+  orgName   String
+  docsURL   String?
+  status    ApplicationStatus @default(PENDING)
+  submittedAt DateTime @default(now())
+  decidedAt  DateTime?
+  decidedBy  String?
+  notes      String?
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  decider   User?    @relation("ApplicationDecider", fields: [decidedBy], references: [id])
+
+  @@map("organizer_applications")
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// User-Organizer Membership
+model UserOrganizer {
+  userId      String
+  organizerId String
+  role        MembershipRole @default(MEMBER)
+  joinedAt    DateTime @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@id([userId, organizerId])
+  @@map("user_organizers")
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  STAFF
+  MEMBER
+}
+
+// Venue Management
+model Venue {
+  id        String   @id @default(cuid())
+  organizerId String
+  name      String
+  locality  String
+  city      String
+  state     String
+  pincode   String
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  tournaments Tournament[]
+
+  @@map("venues")
+}
+
+// Tournament Management
+model Tournament {
+  id        String   @id @default(cuid())
+  organizerId String
+  title     String
+  sport     String
+  date      DateTime
+  entryFee  Decimal  @db.Decimal(10, 2)
+  maxParticipants Int @default(32)
+  status    TournamentStatus @default(DRAFT)
+  venueId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  venue      Venue?    @relation(fields: [venueId], references: [id])
+  judges     JudgeAssignment[]
+  registrations Registration[]
+  payments   Payment[]
+  auditLogs  AuditLog[] @relation("AuditTournament")
+
+  @@map("tournaments")
+}
+
+enum TournamentStatus {
+  DRAFT
+  PENDING_PAYMENT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+  CANCELLED
+}
+
+// Judge Management
+model Judge {
+  id        String   @id @default(cuid())
+  organizerId String
+  fullName  String
+  gender    Gender
+  categories String[] // Array of sports/categories
+  phone     String?
+  email     String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  assignments JudgeAssignment[]
+
+  @@map("judges")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+// Judge Assignment to Tournaments
+model JudgeAssignment {
+  id          String   @id @default(cuid())
+  judgeId     String
+  tournamentId String
+  role        String   @default("JUDGE") // e.g., "HEAD_JUDGE", "LINE_JUDGE"
+  assignedAt  DateTime @default(now())
+
+  // Relations
+  judge      Judge      @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@unique([judgeId, tournamentId])
+  @@map("judge_assignments")
+}
+
+// Payment Tracking
+model Payment {
+  id        String   @id @default(cuid())
+  organizerId String
+  tournamentId String?
+  amount    Decimal  @db.Decimal(10, 2)
+  currency  String   @default("INR")
+  type      PaymentType
+  status    PaymentStatus @default(PENDING)
+  gatewayRef String?
+  stripeSessionId String?
+  stripePaymentIntentId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  tournament Tournament? @relation(fields: [tournamentId], references: [id])
+  auditLogs AuditLog[] @relation("AuditPayment")
+
+  @@map("payments")
+}
+
+enum PaymentType {
+  ORGANIZER_REGISTRATION
+  TOURNAMENT_FEE
+  JUDGE_FEE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+// Player Registration
+model Registration {
+  id        String   @id @default(cuid())
+  tournamentId String
+  playerName String
+  playerEmail String
+  playerPhone String
+  playerAge  Int
+  playerGender Gender
+  playerCategory String
+  paymentStatus PaymentStatus @default(PENDING)
+  registeredAt DateTime @default(now())
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [playerEmail], references: [email])
+
+  @@map("registrations")
+}
+
+// Audit Logging
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorUserId String?
+  organizerId String?
+  action    String
+  entityType String
+  entityId  String?
+  tournamentId String?
+  paymentId String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  // Relations
+  actor     User?      @relation(fields: [actorUserId], references: [id])
+  organizer Organizer? @relation(fields: [organizerId], references: [id])
+  tournament Tournament? @relation("AuditTournament", fields: [tournamentId], references: [id])
+  payment   Payment?   @relation("AuditPayment", fields: [paymentId], references: [id])
+
+  @@map("audit_logs")
+}
