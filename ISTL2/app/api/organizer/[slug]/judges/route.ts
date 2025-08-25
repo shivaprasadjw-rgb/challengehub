@@ -29,19 +29,18 @@ export async function GET(
       return NextResponse.json({ error: 'Organizer not found' }, { status: 404 })
     }
 
-    // Get venues
-    const venues = await prisma.venue.findMany({
+    // Get judges
+    const judges = await prisma.judge.findMany({
       where: { organizerId: organizer.id },
       select: {
         id: true,
         name: true,
-        city: true,
-        state: true,
-        locality: true,
-        pincode: true,
-        address: true,
-        contactNumber: true,
-        email: true
+        email: true,
+        phone: true,
+        specialties: true,
+        experience: true,
+        bio: true,
+        status: true
       },
       orderBy: {
         name: 'asc'
@@ -49,11 +48,11 @@ export async function GET(
     })
 
     return NextResponse.json({
-      venues
+      judges
     })
 
   } catch (error) {
-    console.error('Error fetching organizer venues:', error)
+    console.error('Error fetching organizer judges:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -87,27 +86,33 @@ export async function POST(
       return NextResponse.json({ error: 'Organizer not found' }, { status: 404 })
     }
 
-    const { name, city, state, locality, pincode, address, contactNumber, email } = await req.json()
+    const { name, email, phone, specialties, experience, bio } = await req.json()
 
     // Validation
-    if (!name || !city || !state || !pincode || !address) {
+    if (!name || !email || !phone || !specialties || experience === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Create venue
-    const venue = await prisma.venue.create({
+    if (experience < 0 || experience > 50) {
+      return NextResponse.json(
+        { error: 'Experience must be between 0 and 50 years' },
+        { status: 400 }
+      )
+    }
+
+    // Create judge
+    const judge = await prisma.judge.create({
       data: {
         name,
-        city,
-        state,
-        locality: locality || null,
-        pincode,
-        address,
-        contactNumber: contactNumber || null,
-        email: email || null,
+        email,
+        phone,
+        specialties,
+        experience,
+        bio: bio || null,
+        status: 'ACTIVE',
         organizerId: organizer.id
       }
     })
@@ -117,30 +122,30 @@ export async function POST(
       data: {
         actorUserId: session.user.id,
         organizerId: organizer.id,
-        action: 'CREATE_VENUE',
-        entityType: 'VENUE',
-        entityId: venue.id,
+        action: 'CREATE_JUDGE',
+        entityType: 'JUDGE',
+        entityId: judge.id,
         meta: {
-          venueName: venue.name,
-          city: venue.city,
-          state: venue.state
+          judgeName: judge.name,
+          email: judge.email,
+          specialties: judge.specialties
         }
       }
     })
 
     return NextResponse.json({
       success: true,
-      message: 'Venue created successfully',
-      venue: {
-        id: venue.id,
-        name: venue.name,
-        city: venue.city,
-        state: venue.state
+      message: 'Judge created successfully',
+      judge: {
+        id: judge.id,
+        name: judge.name,
+        email: judge.email,
+        status: judge.status
       }
     })
 
   } catch (error) {
-    console.error('Error creating venue:', error)
+    console.error('Error creating judge:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

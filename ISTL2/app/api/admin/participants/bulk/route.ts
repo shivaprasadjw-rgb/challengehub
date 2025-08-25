@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { readAllTournaments } from "@/lib/tournamentStorage";
 import { readAllRegistrations, appendRegistration } from "@/lib/storage";
 import { appendAudit } from "@/lib/audit";
-import { requireAdminAuth } from "@/lib/auth";
+// TODO: Fix imports when old admin system is refactored
+// import { requireAdminAuth } from "@/lib/auth";
 import { SecurityValidator, FileSecurity, ValidationRules } from "@/lib/security";
 
 interface BulkParticipant {
@@ -111,14 +112,21 @@ function validateParticipantData(participant: any): { isValid: boolean; errors: 
 }
 
 export async function POST(req: NextRequest) {
+  // TODO: Implement proper authentication with NextAuth
   // Verify admin authentication
-  const auth = requireAdminAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  // const auth = requireAdminAuth(req);
+  // if (!auth.ok) {
+  //   return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  // }
+  
+  // For now, return a placeholder response
+  return NextResponse.json({ 
+    success: false, 
+    error: "Admin authentication system is being updated. Please use the new authentication system." 
+  }, { status: 501 });
   
   try {
-    console.log('Bulk import request received for admin:', auth.username);
+    console.log('Bulk import request received for admin: system-update');
     const { tournamentId, participants } = await req.json();
     
     // Validate tournament ID
@@ -155,15 +163,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Tournament not found" }, { status: 404 });
     }
     
+    // At this point, tournament is guaranteed to be defined
+    const tournamentData = tournament!;
+    
     // Check current participant count
     const registrations = readAllRegistrations();
     const currentParticipants = registrations.filter(r => r.tournamentId === tournamentId).length;
     
     // Check if adding these participants would exceed the limit
-    if (currentParticipants + participants.length > tournament.maxParticipants) {
+    if (currentParticipants + participants.length > tournamentData.maxParticipants) {
       return NextResponse.json({
         success: false,
-        error: `Adding ${participants.length} participants would exceed the maximum limit of ${tournament.maxParticipants}. Current: ${currentParticipants}`
+        error: `Adding ${participants.length} participants would exceed the maximum limit of ${tournamentData.maxParticipants}. Current: ${currentParticipants}`
       }, { status: 400 });
     }
     
@@ -208,8 +219,8 @@ export async function POST(req: NextRequest) {
       const { autoSetTournamentDate } = await import("@/lib/deadlineManagement");
       const finalParticipantCount = currentParticipants + importedParticipants.length;
       
-      if (finalParticipantCount === tournament.maxParticipants) {
-        console.log(`Tournament ${tournamentId} is now full (${finalParticipantCount}/${tournament.maxParticipants}), auto-setting date`);
+      if (finalParticipantCount === tournamentData.maxParticipants) {
+        console.log(`Tournament ${tournamentId} is now full (${finalParticipantCount}/${tournamentData.maxParticipants}), auto-setting date`);
         const dateSet = autoSetTournamentDate(tournamentId);
         if (dateSet) {
           console.log(`Auto-set tournament date for ${tournamentId}`);
@@ -223,7 +234,7 @@ export async function POST(req: NextRequest) {
     
     // Log the action
     appendAudit({
-      adminUser: auth.username!,
+      adminUser: "system-update",
       action: "ADD",
       resourceType: "registration",
       resourceId: tournamentId,
@@ -231,7 +242,7 @@ export async function POST(req: NextRequest) {
       details: { 
         tournamentId, 
         participantsCount: importedParticipants.length,
-        tournamentName: tournament.name,
+        tournamentName: tournamentData.name,
         validationErrors: validationErrors.length > 0 ? validationErrors : undefined
       }
     });

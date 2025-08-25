@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { readAllTournaments } from "@/lib/tournamentStorage";
 import { readAllRegistrations, appendRegistration } from "@/lib/storage";
 import { appendAudit } from "@/lib/audit";
-import { requireAdminAuth } from "@/lib/auth";
+// TODO: Fix imports when old admin system is refactored
+// import { requireAdminAuth } from "@/lib/auth";
 
 function requireAdmin(req: NextRequest): { ok: boolean; adminUser?: string } {
   const adminUser = req.headers.get("x-admin-user") || "";
@@ -116,9 +117,16 @@ function validateExcelData(data: any[]): ValidationResult {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = requireAdminAuth(req);
-    if (!auth.ok) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    // TODO: Implement proper authentication with NextAuth
+    // const auth = requireAdminAuth(req);
+    // if (!auth.ok) {
+    //   return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    // }
+    
+    // For now, use the local requireAdmin function
+    const adminCheck = requireAdmin(req);
+    if (!adminCheck.ok) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { tournamentId, participants } = await req.json();
@@ -181,7 +189,9 @@ export async function POST(req: NextRequest) {
         paymentScreenshot: participant.paymentScreenshot,
         transactionId: participant.transactionId,
         registrationDate: new Date().toISOString(),
-        status: 'Confirmed'
+        status: 'Confirmed',
+        assignedRound: { round: 1, match: 1, label: "Round 1", roundNumber: 1 },
+        createdAt: new Date().toISOString()
       };
 
       await appendRegistration(registration);
@@ -190,12 +200,12 @@ export async function POST(req: NextRequest) {
 
     // Log the action
     await appendAudit({
-      action: 'bulk_upload',
+      action: 'ADD',
       resourceType: 'registration',
       resourceId: `${tournamentId}-bulk-${Date.now()}`,
-      adminUser: auth.username,
-      details: `Bulk uploaded ${addedParticipants.length} participants to tournament ${tournamentId}`,
-      timestamp: new Date().toISOString()
+      adminUser: adminCheck.adminUser || 'unknown',
+      tournamentId: tournamentId,
+      details: { message: `Bulk uploaded ${addedParticipants.length} participants to tournament ${tournamentId}` }
     });
 
     return NextResponse.json({

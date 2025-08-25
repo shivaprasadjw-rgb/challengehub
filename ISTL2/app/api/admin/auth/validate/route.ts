@@ -1,32 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminAuth } from "@/lib/auth";
+// TODO: Fix imports when old admin system is refactored
+// import { requireAdminAuth } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    // TODO: Implement proper authentication with NextAuth
     // Verify admin authentication
-    const auth = requireAdminAuth(req);
-    if (!auth.ok) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid session" 
-      }, { status: 401 });
-    }
+    // const auth = requireAdminAuth(req);
+    // if (!auth.ok) {
+    //   return NextResponse.json({ 
+    //     success: false, 
+    //     error: "Invalid session" 
+    //   }, { status: 401 });
+    // }
 
-    const { username } = await req.json();
+    // const { username } = await req.json();
 
-    // Verify username matches session
-    if (auth.username !== username) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Session mismatch" 
-      }, { status: 401 });
-    }
+    // // Verify username matches session
+    // if (auth.username !== username) {
+    //   return NextResponse.json({ 
+    //     success: false, 
+    //     error: "Session mismatch" 
+    //   }, { status: 401 });
+    // }
 
     return NextResponse.json({ 
-      success: true, 
-      username: auth.username,
-      message: "Session valid" 
-    });
+      success: false, 
+      error: "Admin authentication system is being updated. Please use the new authentication system." 
+    }, { status: 501 });
   } catch (error) {
     console.error('Session validation error:', error);
     return NextResponse.json({ 

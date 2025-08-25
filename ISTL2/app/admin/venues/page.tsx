@@ -92,8 +92,8 @@ export default function AdminVenues() {
       city: venue.city,
       state: venue.state,
       pincode: venue.pincode,
-      lat: venue.lat,
-      lng: venue.lng,
+      lat: venue.lat?.toString() || '',
+      lng: venue.lng?.toString() || '',
     });
   };
 

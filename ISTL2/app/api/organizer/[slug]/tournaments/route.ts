@@ -41,7 +41,7 @@ export async function GET(
       whereClause.status = status
     }
 
-    // Get tournaments with registration count
+    // Get tournaments with registration count and venue info
     const tournaments = await prisma.tournament.findMany({
       where: whereClause,
       select: {
@@ -51,6 +51,13 @@ export async function GET(
         date: true,
         status: true,
         maxParticipants: true,
+        entryFee: true,
+        venue: {
+          select: {
+            name: true,
+            city: true
+          }
+        },
         _count: {
           select: {
             registrations: true
@@ -63,7 +70,7 @@ export async function GET(
       take: limit
     })
 
-    // Transform data to include current participants count
+    // Transform data to include current participants count, venue, and entry fee
     const transformedTournaments = tournaments.map(tournament => ({
       id: tournament.id,
       title: tournament.title,
@@ -71,7 +78,9 @@ export async function GET(
       date: tournament.date.toISOString(),
       status: tournament.status,
       maxParticipants: tournament.maxParticipants,
-      currentParticipants: tournament._count.registrations
+      currentParticipants: tournament._count.registrations,
+      entryFee: tournament.entryFee,
+      venue: tournament.venue
     }))
 
     return NextResponse.json({
@@ -145,6 +154,7 @@ export async function POST(
         date: new Date(date),
         entryFee,
         maxParticipants,
+        description: description || null,
         status: TournamentStatus.DRAFT,
         organizerId: organizer.id,
         venueId: venueId || null
