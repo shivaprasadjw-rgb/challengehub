@@ -56,5 +56,13 @@
     "city": "Chennai",
     "state": "Tamil Nadu",
     "pincode": "600119"
+  },
+  {
+    "id": "V-BEN-001",
+    "name": "Smash Sports Academy",
+    "locality": "G.S Palya Main Road, Konappana, Phase 2, Singena Agrahara Rd, Electronic City,",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "pincode": "560100"
   }
 ]

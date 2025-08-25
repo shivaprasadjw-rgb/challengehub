@@ -704,5 +704,35 @@
     ],
     "completedAt": "2025-08-16T03:49:53.566Z",
     "completedBy": "system"
+  },
+  {
+    "id": "TID-5105",
+    "name": "8P CHAMPIONSHIP",
+    "date": "2025-08-31",
+    "sport": "Badminton",
+    "format": "Singles",
+    "category": "Open",
+    "entryFee": 800,
+    "registrationDeadline": "2025-08-31",
+    "maxParticipants": 32,
+    "status": "Upcoming",
+    "venue": {
+      "id": "V-BEN-001",
+      "name": "Smash Sports Academy",
+      "locality": "G.S Palya Main Road, Konappana, Phase 2, Singena Agrahara Rd, Electronic City,",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "pincode": "560100"
+    },
+    "organizer": {
+      "name": "Smash Sports Academy",
+      "phone": "9686855222",
+      "email": "ssa@gmail.com"
+    },
+    "schedule": [],
+    "prizes": [
+      "Winner Trophy",
+      "Runner-up Trophy"
+    ]
   }
 ]

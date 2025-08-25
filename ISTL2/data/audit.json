@@ -4305,5 +4305,56 @@
     },
     "id": "AUD-3olr34rh",
     "timestamp": "2025-08-16T03:59:56.604Z"
+  },
+  {
+    "adminUser": "admin",
+    "action": "ADD",
+    "resourceType": "tournament",
+    "resourceId": "V-BEN-001",
+    "tournamentId": "N/A",
+    "details": {
+      "name": "Smash Sports Academy",
+      "city": "Bengaluru",
+      "state": "Karnataka"
+    },
+    "id": "AUD-sj2dcuc1",
+    "timestamp": "2025-08-25T03:08:21.771Z"
+  },
+  {
+    "adminUser": "admin",
+    "action": "ADD",
+    "resourceType": "tournament",
+    "resourceId": "TID-5105",
+    "tournamentId": "TID-5105",
+    "details": {
+      "name": "8P CHAMPIONSHIP",
+      "sport": "Badminton"
+    },
+    "id": "AUD-cm2in64t",
+    "timestamp": "2025-08-25T03:16:47.453Z"
+  },
+  {
+    "action": "UPDATE",
+    "resourceType": "tournament",
+    "resourceId": "TID-0001",
+    "adminUser": "admin",
+    "details": {
+      "message": "Tournament completion status checked and updated"
+    },
+    "tournamentId": "TID-0001",
+    "id": "AUD-qdsbaiam",
+    "timestamp": "2025-08-25T06:24:37.058Z"
+  },
+  {
+    "action": "UPDATE",
+    "resourceType": "tournament",
+    "resourceId": "TID-0001",
+    "adminUser": "admin",
+    "details": {
+      "message": "Tournament completion status checked and updated"
+    },
+    "tournamentId": "TID-0001",
+    "id": "AUD-fxmzivjh",
+    "timestamp": "2025-08-25T06:24:37.066Z"
   }
 ]
