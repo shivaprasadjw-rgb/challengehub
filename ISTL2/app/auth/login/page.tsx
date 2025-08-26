@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { signIn, getSession, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,6 +16,22 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { data: session, status } = useSession()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (status === 'loading') return
+    
+    if (session?.user) {
+      if (session.user.role === 'SUPER_ADMIN') {
+        router.push('/admin/dashboard')
+      } else if (session.user.organizerIds?.length > 0) {
+        router.push(`/organizer/${session.user.organizerIds[0].slug}/dashboard`)
+      } else {
+        router.push('/dashboard')
+      }
+    }
+  }, [session, status, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,31 +39,69 @@ export default function LoginPage() {
     setError('')
 
     try {
+      console.log('Attempting login with:', { email, password })
+      
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       })
 
+      console.log('SignIn result:', result)
+
       if (result?.error) {
         setError('Invalid email or password')
-      } else {
-        // Check user role and redirect accordingly
-        const session = await getSession()
-        if (session?.user?.role === 'SUPER_ADMIN') {
-          router.push('/admin/dashboard')
-        } else if (session?.user?.organizerIds?.length > 0) {
-          // Redirect to organizer dashboard
-          router.push(`/organizer/${session.user.organizerIds[0].slug}/dashboard`)
-        } else {
-          router.push('/dashboard')
-        }
+        console.error('Login error:', result.error)
+      } else if (result?.ok) {
+        // Wait a moment for session to update
+        setTimeout(async () => {
+          try {
+            const session = await getSession()
+            console.log('Session after login:', session)
+            
+            if (session?.user?.role === 'SUPER_ADMIN') {
+              router.push('/admin/dashboard')
+            } else if (session?.user?.organizerIds?.length > 0) {
+              router.push(`/organizer/${session.user.organizerIds[0].slug}/dashboard`)
+            } else {
+              router.push('/dashboard')
+            }
+          } catch (error) {
+            console.error('Error getting session:', error)
+            setError('Login successful but session error occurred')
+          }
+        }, 1000)
       }
     } catch (error) {
+      console.error('Login error:', error)
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading while checking session
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render form if already authenticated
+  if (session?.user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Redirecting...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
