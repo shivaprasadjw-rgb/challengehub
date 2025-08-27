@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { AlertCircle, Trophy, MapPin, Users, Calendar, Edit, ArrowLeft, Settings, UserPlus, FileText } from 'lucide-react'
 import Link from 'next/link'
+import JudgeAssignment from '@/components/JudgeAssignment'
 
 interface Tournament {
   id: string
@@ -298,6 +299,13 @@ export default function TournamentDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Judge Assignment */}
+            <JudgeAssignment 
+              organizerSlug={organizerSlug}
+              tournamentId={tournamentId}
+              tournamentTitle={tournament.title}
+            />
           </div>
 
           {/* Sidebar */}
