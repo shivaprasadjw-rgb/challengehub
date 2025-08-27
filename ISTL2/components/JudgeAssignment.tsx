@@ -67,7 +67,7 @@ export default function JudgeAssignment({ organizerSlug, tournamentId, tournamen
   }
 
   const handleAssignJudge = async () => {
-    if (!selectedJudge) {
+    if (!selectedJudge || selectedJudge.trim() === '') {
       setError('Please select a judge')
       return
     }
@@ -123,7 +123,11 @@ export default function JudgeAssignment({ organizerSlug, tournamentId, tournamen
 
   const getAvailableJudges = () => {
     const assignedJudgeIds = assignments.map(a => a.judge.id)
-    return judges.filter(judge => !assignedJudgeIds.includes(judge.id))
+    return judges.filter(judge => 
+      judge.id && 
+      judge.fullName && 
+      !assignedJudgeIds.includes(judge.id)
+    )
   }
 
   const getRoleColor = (role: string) => {
@@ -173,13 +177,13 @@ export default function JudgeAssignment({ organizerSlug, tournamentId, tournamen
               <SelectTrigger>
                 <SelectValue placeholder="Select judge" />
               </SelectTrigger>
-              <SelectContent>
-                {getAvailableJudges().map((judge) => (
-                  <SelectItem key={judge.id} value={judge.id}>
-                    {judge.fullName} ({judge.categories.join(', ')})
-                  </SelectItem>
-                ))}
-              </SelectContent>
+                             <SelectContent>
+                 {getAvailableJudges().filter(judge => judge.id && judge.fullName).map((judge) => (
+                   <SelectItem key={judge.id} value={judge.id}>
+                     {judge.fullName} ({judge.categories?.join(', ') || 'No specialties'})
+                   </SelectItem>
+                 ))}
+               </SelectContent>
             </Select>
 
             <Select value={selectedRole} onValueChange={setSelectedRole}>
