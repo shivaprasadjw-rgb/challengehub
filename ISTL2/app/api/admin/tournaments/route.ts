@@ -1,38 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addTournament, readAllTournaments, updateTournamentById, deleteTournamentById, generateTournamentId } from "@/lib/tournamentStorage";
-import { readAllVenues } from "@/lib/venueStorage";
-import { appendAudit } from "@/lib/audit";
-import { requireAdminAuth } from "@/lib/auth";
-import { SecurityValidator, ValidationRules } from "@/lib/security";
-import type { Tournament } from "@/lib/types";
+import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 
 function validateTournamentData(data: any): { isValid: boolean; errors: string[]; sanitized?: any } {
   const errors: string[] = [];
   
   // Required fields validation
-  const requiredFields: Record<string, ValidationRules> = {
-    name: { type: 'text', minLength: 3, maxLength: 100, sanitize: 'text' },
-    sport: { type: 'text', minLength: 2, maxLength: 50, sanitize: 'text' },
-    venueId: { type: 'text', minLength: 1, maxLength: 50, sanitize: 'text' },
-    organizerName: { type: 'text', minLength: 2, maxLength: 100, sanitize: 'text' },
-    organizerEmail: { type: 'email', minLength: 5, maxLength: 254, sanitize: 'text' },
-    organizerPhone: { type: 'phone', minLength: 10, maxLength: 20, sanitize: 'text' }
-  };
-
-  for (const [field, rules] of Object.entries(requiredFields)) {
-    const validation = SecurityValidator.validateInput(data[field], rules);
-    if (!validation.isValid) {
-      errors.push(...validation.errors.map(e => `${field}: ${e}`));
-    }
+  if (!data.title || data.title.length < 3 || data.title.length > 100) {
+    errors.push("Title must be between 3 and 100 characters");
   }
-
-  // Validate venue exists
-  const venue = readAllVenues().find(v => v.id === data.venueId);
-  if (!venue) errors.push("Selected venue does not exist");
   
-  // Validate max participants (must be 32)
-  if (data.maxParticipants !== 32) {
-    errors.push("Maximum participants must be exactly 32");
+  if (!data.sport || data.sport.length < 2 || data.sport.length > 50) {
+    errors.push("Sport must be between 2 and 50 characters");
+  }
+  
+  if (!data.venueId) {
+    errors.push("Venue is required");
+  }
+  
+  // Validate max participants
+  if (data.maxParticipants && (data.maxParticipants < 1 || data.maxParticipants > 1000)) {
+    errors.push("Maximum participants must be between 1 and 1000");
   }
 
   // Validate entry fee
@@ -47,23 +37,14 @@ function validateTournamentData(data: any): { isValid: boolean; errors: string[]
   
   // Sanitize and prepare data
   const sanitized = {
-    name: SecurityValidator.sanitizeText(data.name),
-    date: data.date ? SecurityValidator.sanitizeText(data.date) : undefined,
-    sport: SecurityValidator.sanitizeText(data.sport),
-    format: SecurityValidator.sanitizeText(data.format || "Singles"),
-    category: SecurityValidator.sanitizeText(data.category || "Open"),
+    title: data.title?.trim(),
+    sport: data.sport?.trim(),
+    date: data.date ? new Date(data.date) : undefined,
     entryFee: entryFee,
-    registrationDeadline: SecurityValidator.sanitizeText(data.registrationDeadline || ""),
-    maxParticipants: 32, // Always 32 as per requirements
-    status: data.status || "Upcoming",
-    venue: venue!,
-    organizer: {
-      name: SecurityValidator.sanitizeText(data.organizerName),
-      phone: SecurityValidator.sanitizeText(data.organizerPhone),
-      email: SecurityValidator.sanitizeText(data.organizerEmail),
-    },
-    schedule: [],
-    prizes: Array.isArray(data.prizes) ? data.prizes.map((p: any) => SecurityValidator.sanitizeText(p)) : ["Winner Trophy", "Runner-up Trophy"],
+    maxParticipants: data.maxParticipants || 32,
+    description: data.description?.trim() || "",
+    status: data.status || "PENDING",
+    venueId: data.venueId,
   };
   
   return { isValid: true, errors: [], sanitized };
@@ -71,8 +52,29 @@ function validateTournamentData(data: any): { isValid: boolean; errors: string[]
 
 export async function GET(req: NextRequest) {
   try {
-    const tournaments = readAllTournaments();
-    return NextResponse.json({ success: true, tournaments });
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const tournaments = await prisma.tournament.findMany({
+      include: {
+        venue: true,
+        registrations: {
+          select: {
+            id: true
+          }
+        }
+      }
+    });
+
+    const tournamentsWithCounts = tournaments.map(tournament => ({
+      ...tournament,
+      currentParticipants: tournament.registrations.length
+    }));
+
+    return NextResponse.json({ success: true, tournaments: tournamentsWithCounts });
   } catch (error) {
     console.error('Error fetching tournaments:', error);
     return NextResponse.json({ success: false, error: "Failed to fetch tournaments" }, { status: 500 });
@@ -80,13 +82,13 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // Verify admin authentication
-  const auth = requireAdminAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-  
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const payload = await req.json();
     const validation = validateTournamentData(payload);
     
@@ -99,22 +101,28 @@ export async function POST(req: NextRequest) {
     }
     
     const tournamentData = validation.sanitized!;
-    const tournamentId = generateTournamentId();
     
-    const tournament: Tournament = {
-      id: tournamentId,
-      ...tournamentData,
-    };
+    // Create tournament with default organizer (Sports India)
+    const tournament = await prisma.tournament.create({
+      data: {
+        ...tournamentData,
+        organizerId: 'default-organizer-id', // You'll need to set this properly
+        status: 'PENDING'
+      },
+      include: {
+        venue: true
+      }
+    });
     
-    addTournament(tournament);
-    
-    appendAudit({
-      adminUser: auth.username!,
-      action: "ADD",
-      resourceType: "tournament",
-      resourceId: tournamentId,
-      tournamentId: tournamentId,
-      details: { name: tournament.name, sport: tournament.sport }
+    // Log audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'CREATE',
+        resourceType: 'TOURNAMENT',
+        resourceId: tournament.id,
+        details: { title: tournament.title, sport: tournament.sport }
+      }
     });
     
     return NextResponse.json({ success: true, tournament });
@@ -125,27 +133,16 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  // Verify admin authentication
-  const auth = requireAdminAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-  
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, error: "Missing tournament id" }, { status: 400 });
-    
-    // Validate tournament ID
-    const idValidation = SecurityValidator.validateInput(id, { 
-      type: 'text', 
-      minLength: 1, 
-      maxLength: 50, 
-      sanitize: 'text' 
-    });
-    if (!idValidation.isValid) {
-      return NextResponse.json({ success: false, error: "Invalid tournament ID" }, { status: 400 });
-    }
     
     const payload = await req.json();
     const validation = validateTournamentData(payload);
@@ -159,19 +156,24 @@ export async function PUT(req: NextRequest) {
     }
     
     const tournamentData = validation.sanitized!;
-    const updated = updateTournamentById(id, tournamentData);
     
-    if (!updated) {
-      return NextResponse.json({ success: false, error: "Tournament not found" }, { status: 404 });
-    }
+    const updated = await prisma.tournament.update({
+      where: { id },
+      data: tournamentData,
+      include: {
+        venue: true
+      }
+    });
     
-    appendAudit({
-      adminUser: auth.username!,
-      action: "UPDATE",
-      resourceType: "tournament",
-      resourceId: id,
-      tournamentId: id,
-      details: { name: updated.name, sport: updated.sport }
+    // Log audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'UPDATE',
+        resourceType: 'TOURNAMENT',
+        resourceId: id,
+        details: { title: updated.title, sport: updated.sport }
+      }
     });
     
     return NextResponse.json({ success: true, tournament: updated });
@@ -182,38 +184,30 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  // Verify admin authentication
-  const auth = requireAdminAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-  
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, error: "Missing tournament id" }, { status: 400 });
     
-    // Validate tournament ID
-    const idValidation = SecurityValidator.validateInput(id, { 
-      type: 'text', 
-      minLength: 1, 
-      maxLength: 50, 
-      sanitize: 'text' 
+    await prisma.tournament.delete({
+      where: { id }
     });
-    if (!idValidation.isValid) {
-      return NextResponse.json({ success: false, error: "Invalid tournament ID" }, { status: 400 });
-    }
     
-    const ok = deleteTournamentById(id);
-    if (!ok) return NextResponse.json({ success: false, error: "Tournament not found" }, { status: 404 });
-    
-    appendAudit({
-      adminUser: auth.username!,
-      action: "DELETE",
-      resourceType: "tournament",
-      resourceId: id,
-      tournamentId: id,
-      details: { archived: true }
+    // Log audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'DELETE',
+        resourceType: 'TOURNAMENT',
+        resourceId: id,
+        details: { archived: true }
+      }
     });
     
     return NextResponse.json({ success: true });

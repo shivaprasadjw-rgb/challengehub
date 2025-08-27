@@ -1,28 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addVenue, readAllVenues, updateVenueById, deleteVenueById, generateVenueId } from "@/lib/venueStorage";
-import { appendAudit } from "@/lib/audit";
-import { requireAdminAuth } from "@/lib/auth";
-import { SecurityValidator, ValidationRules } from "@/lib/security";
-import type { Venue } from "@/lib/types";
+import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 // Validate venue data with security checks
 function validateVenueData(data: any): { isValid: boolean; errors: string[]; sanitized?: any } {
   const errors: string[] = [];
   
-  // Required fields validation with security rules
-  const requiredFields: Record<string, ValidationRules> = {
-    name: { type: 'text', minLength: 2, maxLength: 100, sanitize: 'text' },
-    locality: { type: 'text', minLength: 2, maxLength: 100, sanitize: 'text' },
-    city: { type: 'text', minLength: 2, maxLength: 100, sanitize: 'text' },
-    state: { type: 'text', minLength: 2, maxLength: 100, sanitize: 'text' },
-    pincode: { type: 'text', minLength: 6, maxLength: 10, sanitize: 'text' }
-  };
-
-  for (const [field, rules] of Object.entries(requiredFields)) {
-    const validation = SecurityValidator.validateInput(data[field], rules);
-    if (!validation.isValid) {
-      errors.push(...validation.errors.map(e => `${field}: ${e}`));
-    }
+  // Required fields validation
+  if (!data.name || data.name.length < 2 || data.name.length > 100) {
+    errors.push("Name must be between 2 and 100 characters");
+  }
+  
+  if (!data.locality || data.locality.length < 2 || data.locality.length > 100) {
+    errors.push("Locality must be between 2 and 100 characters");
+  }
+  
+  if (!data.city || data.city.length < 2 || data.city.length > 100) {
+    errors.push("City must be between 2 and 100 characters");
+  }
+  
+  if (!data.state || data.state.length < 2 || data.state.length > 100) {
+    errors.push("State must be between 2 and 100 characters");
+  }
+  
+  if (!data.pincode || data.pincode.length < 6 || data.pincode.length > 10) {
+    errors.push("Pincode must be between 6 and 10 characters");
   }
 
   // Validate pincode format (basic Indian pincode validation)
@@ -51,13 +54,14 @@ function validateVenueData(data: any): { isValid: boolean; errors: string[]; san
   
   // Sanitize and prepare data
   const sanitized = {
-    name: SecurityValidator.sanitizeText(data.name),
-    locality: SecurityValidator.sanitizeText(data.locality),
-    city: SecurityValidator.sanitizeText(data.city),
-    state: SecurityValidator.sanitizeText(data.state),
-    pincode: SecurityValidator.sanitizeText(data.pincode),
-    lat: data.lat ? parseFloat(data.lat) : undefined,
-    lng: data.lng ? parseFloat(data.lng) : undefined
+    name: data.name?.trim(),
+    locality: data.locality?.trim(),
+    city: data.city?.trim(),
+    state: data.state?.trim(),
+    pincode: data.pincode?.trim(),
+    lat: data.lat ? parseFloat(data.lat) : null,
+    lng: data.lng ? parseFloat(data.lng) : null,
+    address: data.address?.trim() || ""
   };
   
   return { isValid: true, errors: [], sanitized };
@@ -65,7 +69,13 @@ function validateVenueData(data: any): { isValid: boolean; errors: string[]; san
 
 export async function GET(req: NextRequest) {
   try {
-    const venues = readAllVenues();
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const venues = await prisma.venue.findMany();
     return NextResponse.json({ success: true, venues });
   } catch (error) {
     console.error('Error fetching venues:', error);
@@ -74,13 +84,13 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // Verify admin authentication
-  const auth = requireAdminAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-  
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const payload = await req.json();
     const validation = validateVenueData(payload);
     
@@ -93,22 +103,20 @@ export async function POST(req: NextRequest) {
     }
     
     const venueData = validation.sanitized!;
-    const venueId = generateVenueId(venueData.city);
     
-    const venue: Venue = {
-      id: venueId,
-      ...venueData,
-    };
+    const venue = await prisma.venue.create({
+      data: venueData
+    });
     
-    addVenue(venue);
-    
-    appendAudit({
-      adminUser: auth.username!,
-      action: "ADD",
-      resourceType: "tournament",
-      resourceId: venueId,
-      tournamentId: "N/A",
-      details: { name: venue.name, city: venue.city, state: venue.state }
+    // Log audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'CREATE',
+        resourceType: 'VENUE',
+        resourceId: venue.id,
+        details: { name: venue.name, city: venue.city, state: venue.state }
+      }
     });
     
     return NextResponse.json({ success: true, venue });
@@ -119,27 +127,16 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  // Verify admin authentication
-  const auth = requireAdminAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-  
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, error: "Missing venue id" }, { status: 400 });
-    
-    // Validate venue ID
-    const idValidation = SecurityValidator.validateInput(id, { 
-      type: 'text', 
-      minLength: 1, 
-      maxLength: 50, 
-      sanitize: 'text' 
-    });
-    if (!idValidation.isValid) {
-      return NextResponse.json({ success: false, error: "Invalid venue ID" }, { status: 400 });
-    }
     
     const payload = await req.json();
     const validation = validateVenueData(payload);
@@ -153,19 +150,21 @@ export async function PUT(req: NextRequest) {
     }
     
     const venueData = validation.sanitized!;
-    const updated = updateVenueById(id, venueData);
     
-    if (!updated) {
-      return NextResponse.json({ success: false, error: "Venue not found" }, { status: 404 });
-    }
+    const updated = await prisma.venue.update({
+      where: { id },
+      data: venueData
+    });
     
-    appendAudit({
-      adminUser: auth.username!,
-      action: "UPDATE",
-      resourceType: "tournament",
-      resourceId: id,
-              tournamentId: "N/A",
-      details: { name: updated.name, city: updated.city, state: updated.state }
+    // Log audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'UPDATE',
+        resourceType: 'VENUE',
+        resourceId: id,
+        details: { name: updated.name, city: updated.city, state: updated.state }
+      }
     });
     
     return NextResponse.json({ success: true, venue: updated });
@@ -176,38 +175,30 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  // Verify admin authentication
-  const auth = requireAdminAuth(req);
-  if (!auth.ok) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-  
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, error: "Missing venue id" }, { status: 400 });
     
-    // Validate venue ID
-    const idValidation = SecurityValidator.validateInput(id, { 
-      type: 'text', 
-      minLength: 1, 
-      maxLength: 50, 
-      sanitize: 'text' 
+    await prisma.venue.delete({
+      where: { id }
     });
-    if (!idValidation.isValid) {
-      return NextResponse.json({ success: false, error: "Invalid venue ID" }, { status: 400 });
-    }
     
-    const ok = deleteVenueById(id);
-    if (!ok) return NextResponse.json({ success: false, error: "Venue not found" }, { status: 404 });
-    
-    appendAudit({
-      adminUser: auth.username!,
-      action: "DELETE",
-      resourceType: "tournament",
-      resourceId: id,
-      tournamentId: "N/A",
-      details: { archived: true }
+    // Log audit
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'DELETE',
+        resourceType: 'VENUE',
+        resourceId: id,
+        details: { archived: true }
+      }
     });
     
     return NextResponse.json({ success: true });
