@@ -14,13 +14,13 @@ import Link from 'next/link'
 
 interface Judge {
   id: string
-  name: string
+  fullName: string
   email: string
   phone: string
-  specialties: string[]
-  experience: number
+  categories: string[]
+  gender: string
   bio: string
-  status: string
+  createdAt: string
 }
 
 export default function OrganizerJudges() {
@@ -39,7 +39,7 @@ export default function OrganizerJudges() {
     email: '',
     phone: '',
     specialties: '',
-    experience: '',
+    gender: '',
     bio: ''
   })
 
@@ -78,7 +78,7 @@ export default function OrganizerJudges() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -91,7 +91,7 @@ export default function OrganizerJudges() {
       email: '',
       phone: '',
       specialties: '',
-      experience: '',
+      gender: '',
       bio: ''
     })
     setShowAddForm(false)
@@ -122,8 +122,7 @@ export default function OrganizerJudges() {
         },
         body: JSON.stringify({
           ...formData,
-          specialties: specialtiesArray,
-          experience: parseInt(formData.experience)
+          specialties: specialtiesArray
         }),
       })
 
@@ -143,12 +142,12 @@ export default function OrganizerJudges() {
   const handleEdit = (judge: Judge) => {
     setEditingJudge(judge)
     setFormData({
-      name: judge.name,
+      name: judge.fullName,
       email: judge.email,
-      phone: judge.phone,
-      specialties: judge.specialties.join(', '),
-      experience: judge.experience.toString(),
-      bio: judge.bio
+      phone: judge.phone || '',
+      specialties: judge.categories.join(', '),
+      gender: judge.gender,
+      bio: judge.bio || ''
     })
     setShowAddForm(true)
   }
@@ -279,18 +278,21 @@ export default function OrganizerJudges() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="experience">Years of Experience *</Label>
-                    <Input
-                      id="experience"
-                      name="experience"
-                      type="number"
+                    <Label htmlFor="gender">Gender *</Label>
+                    <select
+                      id="gender"
+                      name="gender"
                       required
-                      min="0"
-                      max="50"
-                      value={formData.experience}
+                      value={formData.gender}
                       onChange={handleChange}
-                      placeholder="e.g., 5"
-                    />
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select gender</option>
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                      <option value="OTHER">Other</option>
+                      <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                    </select>
                   </div>
                 </div>
 
@@ -366,28 +368,24 @@ export default function OrganizerJudges() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="font-medium text-lg">{judge.name}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          judge.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                          judge.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {judge.status}
+                        <h3 className="font-medium text-lg">{judge.fullName}</h3>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          ACTIVE
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">
                         ✉️ {judge.email} • 📞 {judge.phone}
                       </p>
                       <p className="text-sm text-gray-500">
-                        🏆 {judge.experience} years experience
+                        🏆 {judge.categories.length} specialties
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {judge.specialties.map((specialty, index) => (
+                        {judge.categories.map((category, index) => (
                           <span
                             key={index}
                             className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
                           >
-                            {specialty}
+                            {category}
                           </span>
                         ))}
                       </div>

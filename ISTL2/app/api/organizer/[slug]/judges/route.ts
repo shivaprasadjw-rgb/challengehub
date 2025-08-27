@@ -34,16 +34,16 @@ export async function GET(
       where: { organizerId: organizer.id },
       select: {
         id: true,
-        name: true,
+        fullName: true,
         email: true,
         phone: true,
-        specialties: true,
-        experience: true,
+        categories: true,
+        gender: true,
         bio: true,
-        status: true
+        createdAt: true
       },
       orderBy: {
-        name: 'asc'
+        fullName: 'asc'
       }
     })
 
@@ -86,19 +86,12 @@ export async function POST(
       return NextResponse.json({ error: 'Organizer not found' }, { status: 404 })
     }
 
-    const { name, email, phone, specialties, experience, bio } = await req.json()
+    const { name, email, phone, specialties, experience, bio, gender } = await req.json()
 
     // Validation
-    if (!name || !email || !phone || !specialties || experience === undefined) {
+    if (!name || !email || !phone || !specialties || !gender) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
-
-    if (experience < 0 || experience > 50) {
-      return NextResponse.json(
-        { error: 'Experience must be between 0 and 50 years' },
         { status: 400 }
       )
     }
@@ -106,13 +99,12 @@ export async function POST(
     // Create judge
     const judge = await prisma.judge.create({
       data: {
-        name,
+        fullName: name,
         email,
         phone,
-        specialties,
-        experience,
+        categories: specialties,
+        gender,
         bio: bio || null,
-        status: 'ACTIVE',
         organizerId: organizer.id
       }
     })
@@ -126,9 +118,9 @@ export async function POST(
         entityType: 'JUDGE',
         entityId: judge.id,
         meta: {
-          judgeName: judge.name,
+          judgeName: judge.fullName,
           email: judge.email,
-          specialties: judge.specialties
+          categories: judge.categories
         }
       }
     })
@@ -138,9 +130,8 @@ export async function POST(
       message: 'Judge created successfully',
       judge: {
         id: judge.id,
-        name: judge.name,
-        email: judge.email,
-        status: judge.status
+        fullName: judge.fullName,
+        email: judge.email
       }
     })
 

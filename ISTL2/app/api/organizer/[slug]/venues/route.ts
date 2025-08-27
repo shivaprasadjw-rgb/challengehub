@@ -39,9 +39,7 @@ export async function GET(
         state: true,
         locality: true,
         pincode: true,
-        address: true,
-        contactNumber: true,
-        email: true
+        address: true
       },
       orderBy: {
         name: 'asc'
@@ -87,7 +85,7 @@ export async function POST(
       return NextResponse.json({ error: 'Organizer not found' }, { status: 404 })
     }
 
-    const { name, city, state, locality, pincode, address, contactNumber, email } = await req.json()
+    const { name, city, state, locality, pincode, address } = await req.json()
 
     // Validation
     if (!name || !city || !state || !pincode || !address) {
@@ -106,8 +104,6 @@ export async function POST(
         locality: locality || null,
         pincode,
         address,
-        contactNumber: contactNumber || null,
-        email: email || null,
         organizerId: organizer.id
       }
     })

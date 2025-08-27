@@ -122,7 +122,7 @@ export async function POST(
       return NextResponse.json({ error: 'Organizer not found' }, { status: 404 })
     }
 
-    const { title, sport, date, entryFee, maxParticipants, description, venueId } = await req.json()
+    const { title, sport, date, entryFee, maxParticipants, venueId } = await req.json()
 
     // Validation
     if (!title || !sport || !date || entryFee === undefined || !maxParticipants) {
@@ -154,7 +154,6 @@ export async function POST(
         date: new Date(date),
         entryFee,
         maxParticipants,
-        description: description || null,
         status: TournamentStatus.DRAFT,
         organizerId: organizer.id,
         venueId: venueId || null

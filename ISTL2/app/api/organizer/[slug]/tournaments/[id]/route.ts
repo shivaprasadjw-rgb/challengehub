@@ -75,7 +75,6 @@ export async function GET(
       maxParticipants: tournament.maxParticipants,
       currentParticipants: tournament.registrations.length,
       entryFee: tournament.entryFee,
-      description: tournament.description,
       venue: tournament.venue,
       registrations: tournament.registrations
     }
@@ -131,7 +130,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
-    const { title, sport, date, entryFee, maxParticipants, description, venueId, status } = await req.json()
+    const { title, sport, date, entryFee, maxParticipants, venueId, status } = await req.json()
 
     // Validation
     if (!title || !sport || !date || entryFee === undefined || !maxParticipants) {
@@ -164,7 +163,6 @@ export async function PUT(
         date: new Date(date),
         entryFee,
         maxParticipants,
-        description: description || null,
         status: status || existingTournament.status,
         venueId: venueId || null
       }

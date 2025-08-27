@@ -41,19 +41,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Judge not found' }, { status: 404 })
     }
 
-    const { name, email, phone, specialties, experience, bio } = await req.json()
+    const { name, email, phone, specialties, experience, bio, gender } = await req.json()
 
     // Validation
-    if (!name || !email || !phone || !specialties || experience === undefined) {
+    if (!name || !email || !phone || !specialties || !gender) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
-
-    if (experience < 0 || experience > 50) {
-      return NextResponse.json(
-        { error: 'Experience must be between 0 and 50 years' },
         { status: 400 }
       )
     }
@@ -62,11 +55,11 @@ export async function PUT(
     const judge = await prisma.judge.update({
       where: { id: params.id },
       data: {
-        name,
+        fullName: name,
         email,
         phone,
-        specialties,
-        experience,
+        categories: specialties,
+        gender,
         bio: bio || null
       }
     })
@@ -80,9 +73,9 @@ export async function PUT(
         entityType: 'JUDGE',
         entityId: judge.id,
         meta: {
-          judgeName: judge.name,
+          judgeName: judge.fullName,
           email: judge.email,
-          specialties: judge.specialties
+          categories: judge.categories
         }
       }
     })
@@ -92,9 +85,8 @@ export async function PUT(
       message: 'Judge updated successfully',
       judge: {
         id: judge.id,
-        name: judge.name,
-        email: judge.email,
-        status: judge.status
+        fullName: judge.fullName,
+        email: judge.email
       }
     })
 
@@ -171,7 +163,7 @@ export async function DELETE(
         entityType: 'JUDGE',
         entityId: params.id,
         meta: {
-          judgeName: existingJudge.name,
+          judgeName: existingJudge.fullName,
           email: existingJudge.email
         }
       }

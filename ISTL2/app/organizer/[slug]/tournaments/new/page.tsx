@@ -32,7 +32,6 @@ export default function CreateTournament() {
     time: '',
     entryFee: '',
     maxParticipants: '32',
-    description: '',
     venueId: ''
   })
   const [venues, setVenues] = useState<Venue[]>([])
@@ -97,7 +96,6 @@ export default function CreateTournament() {
           date: dateTime.toISOString(),
           entryFee: parseFloat(formData.entryFee),
           maxParticipants: parseInt(formData.maxParticipants),
-          description: formData.description,
           venueId: formData.venueId || null
         }),
       })

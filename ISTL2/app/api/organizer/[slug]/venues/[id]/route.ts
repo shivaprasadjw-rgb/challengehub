@@ -41,7 +41,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Venue not found' }, { status: 404 })
     }
 
-    const { name, city, state, locality, pincode, address, contactNumber, email } = await req.json()
+    const { name, city, state, locality, pincode, address } = await req.json()
 
     // Validation
     if (!name || !city || !state || !pincode || !address) {
@@ -60,9 +60,7 @@ export async function PUT(
         state,
         locality: locality || null,
         pincode,
-        address,
-        contactNumber: contactNumber || null,
-        email: email || null
+        address
       }
     })
 

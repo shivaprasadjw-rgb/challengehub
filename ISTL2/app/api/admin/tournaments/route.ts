@@ -42,7 +42,6 @@ function validateTournamentData(data: any): { isValid: boolean; errors: string[]
     date: data.date ? new Date(data.date) : undefined,
     entryFee: entryFee,
     maxParticipants: data.maxParticipants || 32,
-    description: data.description?.trim() || "",
     status: data.status || "PENDING",
     venueId: data.venueId,
   };
