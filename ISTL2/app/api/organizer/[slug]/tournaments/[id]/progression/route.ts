@@ -378,6 +378,11 @@ async function advanceToNextRound(tournamentId: string, currentRoundName: string
     if (nextRoundName) {
       await generateNextRoundMatches(tournamentId, currentRound.matches, nextRoundName)
       
+      // Special case: After Semifinal, also create 3rd Place Match
+      if (currentRoundName === 'Semifinal') {
+        await generate3rdPlaceMatch(tournamentId, currentRound.matches)
+      }
+      
       // Update tournament current round
       await prisma.tournament.update({
         where: { id: tournamentId },
@@ -433,7 +438,9 @@ function getNextRoundName(currentRound: string): string | null {
     'Round of 32': 'Round of 16',
     'Round of 16': 'Quarterfinal',
     'Quarterfinal': 'Semifinal',
-    'Semifinal': 'Final'
+    'Semifinal': 'Final',
+    '3rd Place Match': null, // 3rd Place Match doesn't advance further
+    'Final': null // Final doesn't advance further
   }
   return progression[currentRound] || null
 }
@@ -475,6 +482,41 @@ async function generateNextRoundMatches(tournamentId: string, completedMatches: 
   if (matches.length > 0) {
     await prisma.match.createMany({
       data: matches
+    })
+  }
+}
+
+async function generate3rdPlaceMatch(tournamentId: string, semifinalMatches: any[]) {
+  // Get the 3rd Place Match round
+  const thirdPlaceRound = await prisma.tournamentRound.findFirst({
+    where: {
+      tournamentId,
+      name: '3rd Place Match'
+    }
+  })
+
+  if (!thirdPlaceRound) return
+
+  // Get the losers from semifinal matches
+  const losers = semifinalMatches.map(match => {
+    if (match.winner === match.player1) {
+      return match.player2
+    } else {
+      return match.player1
+    }
+  }).filter(Boolean)
+
+  if (losers.length >= 2) {
+    const match = {
+      tournamentId,
+      roundId: thirdPlaceRound.id,
+      matchCode: '3P-M01',
+      player1: losers[0],
+      player2: losers[1]
+    }
+
+    await prisma.match.create({
+      data: match
     })
   }
 }
