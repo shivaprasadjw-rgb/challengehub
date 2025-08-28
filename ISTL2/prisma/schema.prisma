@@ -106,12 +106,16 @@ model Tournament {
   maxParticipants Int               @default(32)
   status          TournamentStatus  @default(DRAFT)
   venueId         String?
+  currentRound    String?
+  progressionData Json?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   auditLogs       AuditLog[]        @relation("AuditTournament")
   judges          JudgeAssignment[]
   payments        Payment[]
   registrations   Registration[]
+  matches         Match[]
+  rounds          TournamentRound[]
   organizer       Organizer         @relation(fields: [organizerId], references: [id], onDelete: Cascade)
   venue           Venue?            @relation(fields: [venueId], references: [id])
 
@@ -130,6 +134,7 @@ model Judge {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   assignments JudgeAssignment[]
+  matches     Match[]
   organizer   Organizer         @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 
   @@map("judges")
@@ -266,5 +271,54 @@ enum PaymentStatus {
   SUCCEEDED
   FAILED
   REFUNDED
+  CANCELLED
+}
+
+model TournamentRound {
+  id           String            @id @default(cuid())
+  tournamentId String
+  name         String
+  order        Int
+  maxMatches   Int
+  isCompleted  Boolean           @default(false)
+  completedAt  DateTime?
+  completedBy  String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  tournament   Tournament        @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  matches      Match[]
+
+  @@unique([tournamentId, name])
+  @@map("tournament_rounds")
+}
+
+model Match {
+  id           String         @id @default(cuid())
+  tournamentId String
+  roundId      String
+  matchCode    String
+  player1      String?
+  player2      String?
+  winner       String?
+  score        String?
+  isCompleted  Boolean        @default(false)
+  scheduledAt  DateTime?
+  completedAt  DateTime?
+  judgeId      String?
+  courtNumber  Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  tournament   Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  round        TournamentRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  judge        Judge?         @relation(fields: [judgeId], references: [id])
+
+  @@unique([tournamentId, matchCode])
+  @@map("matches")
+}
+
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
   CANCELLED
 }

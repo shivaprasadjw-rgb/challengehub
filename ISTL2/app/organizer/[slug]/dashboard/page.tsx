@@ -214,6 +214,20 @@ export default function OrganizerDashboard() {
             </Card>
           </Link>
 
+          <Link href={`/organizer/${organizerSlug}/members`}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <Users className="mx-auto h-8 w-8 text-blue-600" />
+                <CardTitle className="text-lg">Team Members</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 text-center">
+                  Manage staff and roles
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href={`/organizer/${organizerSlug}/settings`}>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader className="text-center">

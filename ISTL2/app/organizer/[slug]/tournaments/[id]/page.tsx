@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge'
 import { AlertCircle, Trophy, MapPin, Users, Calendar, Edit, ArrowLeft, Settings, UserPlus, FileText } from 'lucide-react'
 import Link from 'next/link'
 import JudgeAssignment from '@/components/JudgeAssignment'
+import TournamentProgression from '@/components/TournamentProgression'
+import BulkRegistration from '@/components/BulkRegistration'
 
 interface Tournament {
   id: string
@@ -300,8 +302,23 @@ export default function TournamentDetail() {
               </CardContent>
             </Card>
 
+            {/* Bulk Registration Management */}
+            <BulkRegistration 
+              organizerSlug={organizerSlug}
+              tournamentId={tournamentId}
+              tournamentTitle={tournament.title}
+              onRegistrationsUpdated={fetchTournament}
+            />
+
             {/* Judge Assignment */}
             <JudgeAssignment 
+              organizerSlug={organizerSlug}
+              tournamentId={tournamentId}
+              tournamentTitle={tournament.title}
+            />
+
+            {/* Tournament Progression */}
+            <TournamentProgression 
               organizerSlug={organizerSlug}
               tournamentId={tournamentId}
               tournamentTitle={tournament.title}

@@ -1,824 +1,460 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-
-interface TournamentProgressionProps {
-  tournamentId: string;
-  onClose: () => void;
-}
+import React, { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Trophy, Play, Clock, CheckCircle, AlertCircle, Users, ArrowRight } from 'lucide-react'
 
 interface Match {
-  id: string;
-  round: string;
-  players: string[];
-  winner?: string;
-  isCompleted: boolean;
+  id: string
+  matchCode: string
+  player1: string | null
+  player2: string | null
+  winner: string | null
+  score: string | null
+  isCompleted: boolean
+  scheduledAt: string | null
+  completedAt: string | null
+  judgeId: string | null
+  courtNumber: number | null
+  judge?: {
+    id: string
+    fullName: string
+  }
 }
 
-interface ProgressionData {
-  rounds: string[];
-  matches: Match[];
-  currentRound: string;
-  status: string;
+interface TournamentRound {
+  id: string
+  name: string
+  order: number
+  maxMatches: number
+  isCompleted: boolean
+  completedAt: string | null
+  completedBy: string | null
+  matches: Match[]
 }
 
-// Custom Button component using Tailwind CSS
-const Button = ({ 
-  children, 
-  onClick, 
-  disabled = false, 
-  variant = "primary",
-  size = "md",
-  className = ""
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  variant?: "primary" | "secondary" | "danger" | "success";
-  size?: "sm" | "md" | "lg";
-  className?: string;
-}) => {
-  const baseClasses = "font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
-  
-  const variantClasses = {
-    primary: "bg-primary text-white hover:bg-primary-dark focus:ring-primary",
-    secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-    success: "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500"
-  };
-  
-  const sizeClasses = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base"
-  };
-  
-  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer";
-  
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${className}`}
-    >
-      {children}
-    </button>
-  );
-};
+interface TournamentProgressionData {
+  id: string
+  title: string
+  status: string
+  currentRound: string | null
+  rounds: TournamentRound[]
+  totalParticipants: number
+  maxParticipants: number
+}
 
-// Custom Select component using Tailwind CSS
-const Select = ({ 
-  value, 
-  onValueChange, 
-  children, 
-  placeholder = "Select option",
-  className = ""
-}: {
-  value: string;
-  onValueChange: (value: string) => void;
-  children: React.ReactNode;
-  placeholder?: string;
-  className?: string;
-}) => {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onValueChange(e.target.value)}
-      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${className}`}
-    >
-      <option value="">{placeholder}</option>
-      {children}
-    </select>
-  );
-};
+interface TournamentProgressionProps {
+  organizerSlug: string
+  tournamentId: string
+  tournamentTitle: string
+}
 
-const SelectItem = ({ value, children }: { value: string; children: React.ReactNode }) => (
-  <option value={value}>{children}</option>
-);
-
-// Custom Card component using Tailwind CSS
-const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white rounded-lg shadow-md border border-gray-200 ${className}`}>
-    {children}
-  </div>
-);
-
-const CardHeader = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`px-6 py-4 border-b border-gray-200 ${className}`}>
-    {children}
-  </div>
-);
-
-const CardTitle = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <h3 className={`text-lg font-semibold text-gray-900 ${className}`}>
-    {children}
-  </h3>
-);
-
-const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`px-6 py-4 ${className}`}>
-    {children}
-  </div>
-);
-
-// Custom Badge component using Tailwind CSS
-const Badge = ({ 
-  children, 
-  variant = "default",
-  className = ""
-}: {
-  children: React.ReactNode;
-  variant?: "default" | "success" | "warning" | "error" | "info";
-  className?: string;
-}) => {
-  const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-  
-  const variantClasses = {
-    default: "bg-gray-100 text-gray-800",
-    success: "bg-green-100 text-green-800",
-    warning: "bg-yellow-100 text-yellow-800",
-    error: "bg-red-100 text-red-800",
-    info: "bg-blue-100 text-blue-800"
-  };
-  
-  return (
-    <span className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
-      {children}
-    </span>
-  );
-};
-
-// Custom Alert component using Tailwind CSS
-const Alert = ({ 
-  children, 
-  variant = "default",
-  className = ""
-}: {
-  children: React.ReactNode;
-  variant?: "default" | "success" | "warning" | "error" | "info";
-  className?: string;
-}) => {
-  const baseClasses = "p-4 rounded-md border";
-  
-  const variantClasses = {
-    default: "bg-blue-50 border-blue-200 text-blue-800",
-    success: "bg-green-50 border-green-200 text-green-800",
-    warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
-    error: "bg-red-50 border-red-200 text-red-800",
-    info: "bg-blue-50 border-blue-200 text-blue-800"
-  };
-  
-  return (
-    <div className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-const AlertDescription = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`text-sm ${className}`}>
-    {children}
-  </div>
-);
-
-// Custom icons using simple SVG or text
-const Loader2 = ({ className = "animate-spin h-4 w-4" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg>
-);
-
-const CheckCircle = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const AlertCircle = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const Info = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-export default function TournamentProgression({ tournamentId, onClose }: TournamentProgressionProps) {
-  // Validate required props
-  if (!tournamentId || typeof tournamentId !== 'string') {
-    console.error('TournamentProgression: tournamentId is required and must be a string');
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Invalid Tournament ID</h2>
-          <p className="text-gray-600 mb-4">A valid tournament ID is required to display progression data.</p>
-          <Button onClick={onClose} variant="secondary" className="w-full">Close</Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!onClose || typeof onClose !== 'function') {
-    console.error('TournamentProgression: onClose is required and must be a function');
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Invalid Close Function</h2>
-          <p className="text-gray-600 mb-4">A valid close function is required.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const [selectedRound, setSelectedRound] = useState<string>("");
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [progression, setProgression] = useState<ProgressionData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
-  const [csrfToken, setCsrfToken] = useState<string>("");
-
-  // Generate CSRF token on component mount
-  useEffect(() => {
-    try {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        setCsrfToken(crypto.randomUUID());
-      } else {
-        // Fallback for environments without crypto.randomUUID
-        const fallbackToken = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-          const r = Math.random() * 16 | 0;
-          const v = c === 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
-        });
-        setCsrfToken(fallbackToken);
-      }
-    } catch (error) {
-      console.error('Error generating CSRF token:', error);
-      // Fallback token
-      setCsrfToken('fallback-token-' + Date.now());
-    }
-  }, []);
-
-  // Get session ID from localStorage
-  const getSessionId = (): string | null => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const sessionId = localStorage.getItem('adminSessionId');
-        return sessionId && typeof sessionId === 'string' && sessionId.trim() !== '' ? sessionId : null;
-      }
-    } catch (error) {
-      console.error('Error accessing localStorage:', error);
-    }
-    return null;
-  };
-
-  const fetchProgression = async () => {
-    if (!tournamentId || typeof tournamentId !== 'string') {
-      console.error('fetchProgression: Invalid tournamentId');
-      setMessage({ type: 'error', text: 'Invalid tournament ID provided' });
-      return;
-    }
-
-    try {
-      const sessionId = getSessionId();
-      if (!sessionId) {
-        setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
-        return;
-      }
-
-      const response = await fetch(`/api/admin/tournament-progression?tournamentId=${tournamentId}`, {
-        headers: {
-          'x-session-id': sessionId,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProgression(data.progression || null);
-        setMatches(data.matches || []);
-        setMessage(null); // Clear previous messages
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to fetch progression data' });
-        // Ensure matches is always an array even on error
-        setMatches([]);
-      }
-    } catch (error: any) {
-      console.error('Error fetching progression:', error);
-      setMessage({ type: 'error', text: 'Failed to fetch progression data' });
-      // Ensure matches is always an array even on error
-      setMatches([]);
-    }
-  };
-
-  const getAvailableRounds = (): string[] => {
-    try {
-      if (progression?.rounds && Array.isArray(progression.rounds) && progression.rounds.length > 0) {
-        // Filter out any invalid round values
-        return progression.rounds.filter(round => round && typeof round === 'string' && round.trim() !== '');
-      }
-    } catch (error) {
-      console.error('Error getting available rounds:', error);
-    }
-    
-    // Fallback to standard tournament rounds
-    return ["Round of 32", "Round of 16", "Quarterfinals", "Semifinals", "Final", "3rd Place Match"];
-  };
-
-  const handleRoundChange = (round: string) => {
-    if (!round || typeof round !== 'string') {
-      setSelectedRound("");
-      setMatches([]);
-      return;
-    }
-    
-    setSelectedRound(round);
-    if (progression && progression.matches && Array.isArray(progression.matches)) {
-      const roundMatches = progression.matches.filter(m => m && m.round === round);
-      setMatches(roundMatches || []);
-    } else {
-      setMatches([]);
-    }
-  };
-
-  const populateRound32Matches = async () => {
-    setLoading(true);
-    try {
-      const sessionId = getSessionId();
-      if (!sessionId) {
-        setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
-        return;
-      }
-
-      const response = await fetch('/api/admin/tournament-progression', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-session-id': sessionId,
-        },
-        body: JSON.stringify({
-          tournamentId,
-          action: 'populateRound32'
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessage({ type: 'success', text: data.message || 'Round of 32 matches populated successfully!' });
-        
-        // Refresh progression data after a short delay
-        setTimeout(() => {
-          fetchProgression();
-        }, 500);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to populate matches' });
-      }
-    } catch (error: any) {
-      console.error('Error populating matches:', error);
-      setMessage({ type: 'error', text: 'Failed to populate matches' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const populateRound16Matches = async () => {
-    setLoading(true);
-    try {
-      const sessionId = getSessionId();
-      if (!sessionId) {
-        setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
-        return;
-      }
-
-      const response = await fetch('/api/admin/tournament-progression', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-session-id': sessionId,
-        },
-        body: JSON.stringify({
-          tournamentId,
-          action: 'populateRound16'
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessage({ type: 'success', text: data.message || 'Round of 16 matches populated successfully!' });
-        
-        setTimeout(() => {
-          fetchProgression();
-        }, 500);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to populate matches' });
-      }
-    } catch (error: any) {
-      console.error('Error populating matches:', error);
-      setMessage({ type: 'error', text: 'Failed to populate matches' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fixProgression = async () => {
-    setLoading(true);
-    try {
-      const sessionId = getSessionId();
-      if (!sessionId) {
-        setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
-        return;
-      }
-
-      const response = await fetch('/api/admin/tournament-progression', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-session-id': sessionId,
-        },
-        body: JSON.stringify({
-          tournamentId,
-          action: 'fixProgression'
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessage({ type: 'success', text: data.message || 'Tournament progression fixed successfully!' });
-        
-        setTimeout(() => {
-          fetchProgression();
-        }, 500);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to fix progression' });
-      }
-    } catch (error: any) {
-      console.error('Error fixing progression:', error);
-      setMessage({ type: 'error', text: 'Failed to fix progression' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const validateIntegrity = async () => {
-    setLoading(true);
-    try {
-      const sessionId = getSessionId();
-      if (!sessionId) {
-        setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
-        return;
-      }
-
-      const response = await fetch('/api/admin/tournament-progression', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-session-id': sessionId,
-        },
-        body: JSON.stringify({
-          tournamentId,
-          action: 'validateIntegrity'
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessage({ type: 'success', text: data.message || 'Tournament integrity validated successfully!' });
-        
-        setTimeout(() => {
-          fetchProgression();
-        }, 500);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to validate integrity' });
-      }
-    } catch (error: any) {
-      console.error('Error validating integrity:', error);
-      setMessage({ type: 'error', text: 'Failed to validate integrity' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const regenerateProgression = async () => {
-    setLoading(true);
-    try {
-      const sessionId = localStorage.getItem("adminSessionId");
-      if (!sessionId) {
-        setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
-        return;
-      }
-
-      const response = await fetch('/api/admin/tournament-progression', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-session-id': sessionId,
-        },
-        body: JSON.stringify({
-          tournamentId,
-          action: 'regenerateProgression'
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessage({ type: 'success', text: data.message || 'Tournament progression regenerated successfully!' });
-        
-        setTimeout(() => {
-          fetchProgression();
-        }, 500);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to regenerate progression' });
-      }
-    } catch (error: any) {
-      console.error('Error regenerating progression:', error);
-      setMessage({ type: 'error', text: 'Failed to regenerate progression' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const clearSchedule = async () => {
-    setLoading(true);
-    try {
-      const sessionId = localStorage.getItem("adminSessionId");
-      if (!sessionId) {
-        setMessage({ type: 'error', text: 'No active session found. Please log in again.' });
-        return;
-      }
-
-      const response = await fetch('/api/admin/tournament-progression', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-session-id': sessionId,
-        },
-        body: JSON.stringify({
-          tournamentId,
-          action: 'clearSchedule'
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessage({ type: 'success', text: data.message || 'Tournament schedule cleared successfully!' });
-        
-        setTimeout(() => {
-          fetchProgression();
-        }, 500);
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.error || 'Failed to clear schedule' });
-      }
-    } catch (error: any) {
-      console.error('Error clearing schedule:', error);
-      setMessage({ type: 'error', text: 'Failed to clear schedule' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Ensure matches is always an array before rendering
-  const safeMatches = Array.isArray(matches) ? matches : [];
-  const matchesCount = safeMatches.length;
+export default function TournamentProgression({ 
+  organizerSlug, 
+  tournamentId, 
+  tournamentTitle 
+}: TournamentProgressionProps) {
+  const [tournament, setTournament] = useState<TournamentProgressionData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
+  const [matchResult, setMatchResult] = useState({ winner: '', score: '' })
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
-    if (tournamentId && typeof tournamentId === 'string') {
-      fetchProgression();
+    fetchTournamentProgression()
+  }, [])
+
+  const fetchTournamentProgression = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/organizer/${organizerSlug}/tournaments/${tournamentId}/progression`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        setTournament(data.tournament)
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to fetch tournament progression')
+      }
+    } catch (error) {
+      console.error('Error fetching tournament progression:', error)
+      setError('Failed to fetch tournament progression')
+    } finally {
+      setLoading(false)
     }
-  }, [tournamentId]);
+  }
 
-  const getMessageIcon = (type: string) => {
-    if (!type || typeof type !== 'string') {
-      return <Info className="h-4 w-4" />;
+  const initializeTournament = async () => {
+    try {
+      setUpdating(true)
+      const response = await fetch(`/api/organizer/${organizerSlug}/tournaments/${tournamentId}/progression`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'initialize'
+        })
+      })
+
+      if (response.ok) {
+        await fetchTournamentProgression()
+        setError('')
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to initialize tournament')
+      }
+    } catch (error) {
+      console.error('Error initializing tournament:', error)
+      setError('Failed to initialize tournament')
+    } finally {
+      setUpdating(false)
     }
-    
-    switch (type) {
-      case 'success': return <CheckCircle className="h-4 w-4" />;
-      case 'error': return <AlertCircle className="h-4 w-4" />;
-      case 'info': return <Info className="h-4 w-4" />;
-      default: return <Info className="h-4 w-4" />;
+  }
+
+  const updateMatchResult = async () => {
+    if (!selectedMatch || !matchResult.winner || !matchResult.score) return
+
+    try {
+      setUpdating(true)
+      const response = await fetch(`/api/organizer/${organizerSlug}/tournaments/${tournamentId}/progression`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'update_match',
+          data: {
+            matchId: selectedMatch.id,
+            winner: matchResult.winner,
+            score: matchResult.score
+          }
+        })
+      })
+
+      if (response.ok) {
+        await fetchTournamentProgression()
+        setSelectedMatch(null)
+        setMatchResult({ winner: '', score: '' })
+        setError('')
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to update match result')
+      }
+    } catch (error) {
+      console.error('Error updating match result:', error)
+      setError('Failed to update match result')
+    } finally {
+      setUpdating(false)
     }
-  };
+  }
 
-  const getMessageColor = (type: string) => {
-    if (!type || typeof type !== 'string') {
-      return 'border-blue-200 bg-blue-50 text-blue-800';
+  const advanceRound = async (roundName: string) => {
+    try {
+      setUpdating(true)
+      const response = await fetch(`/api/organizer/${organizerSlug}/tournaments/${tournamentId}/progression`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'advance_round',
+          data: {
+            currentRound: roundName
+          }
+        })
+      })
+
+      if (response.ok) {
+        await fetchTournamentProgression()
+        setError('')
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to advance round')
+      }
+    } catch (error) {
+      console.error('Error advancing round:', error)
+      setError('Failed to advance round')
+    } finally {
+      setUpdating(false)
     }
-    
-    switch (type) {
-      case 'success': return 'border-green-200 bg-green-50 text-green-800';
-      case 'error': return 'border-red-200 bg-red-50 text-red-800';
-      case 'info': return 'border-blue-200 bg-blue-50 text-blue-800';
-      default: return 'border-blue-200 bg-blue-50 text-blue-800';
+  }
+
+  const openMatchDialog = (match: Match) => {
+    setSelectedMatch(match)
+    setMatchResult({
+      winner: match.winner || '',
+      score: match.score || ''
+    })
+  }
+
+  const getMatchStatusBadge = (match: Match) => {
+    if (match.isCompleted) {
+      return <Badge variant="default" className="bg-green-100 text-green-800">Completed</Badge>
     }
-  };
+    if (match.player1 && match.player2) {
+      return <Badge variant="secondary">Ready</Badge>
+    }
+    return <Badge variant="outline">Waiting</Badge>
+  }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Tournament Progression Management</h2>
-          <Button onClick={onClose} variant="secondary">✕</Button>
-        </div>
+  const getRoundStatusBadge = (round: TournamentRound) => {
+    if (round.isCompleted) {
+      return <Badge variant="default" className="bg-green-100 text-green-800">
+        <CheckCircle className="w-3 h-3 mr-1" />
+        Completed
+      </Badge>
+    }
+    if (tournament?.currentRound === round.name) {
+      return <Badge variant="default" className="bg-blue-100 text-blue-800">
+        <Clock className="w-3 h-3 mr-1" />
+        In Progress
+      </Badge>
+    }
+    return <Badge variant="outline">Pending</Badge>
+  }
 
-        {message && (
-          <Alert className={`mb-4 ${getMessageColor(message.type)}`}>
-            {getMessageIcon(message.type)}
-            <AlertDescription>{message.text}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Controls */}
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Progression Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select Round:</label>
-                  <Select value={selectedRound || ""} onValueChange={handleRoundChange}>
-                    <SelectItem value="">Choose a round...</SelectItem>
-                    {getAvailableRounds().map((round) => (
-                        <SelectItem key={round} value={round}>
-                          {round}
-                        </SelectItem>
-                      ))}
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    onClick={populateRound32Matches} 
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Populate Round of 32
-                  </Button>
-                  
-                  <Button 
-                    onClick={populateRound16Matches} 
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Populate Round of 16
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    onClick={fixProgression} 
-                    disabled={loading}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Fix Progression
-                  </Button>
-                  
-                  <Button 
-                    onClick={validateIntegrity} 
-                    disabled={loading}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Validate Data
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    onClick={regenerateProgression} 
-                    disabled={loading}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Regenerate
-                  </Button>
-                  
-                  <Button 
-                    onClick={clearSchedule} 
-                    disabled={loading}
-                    variant="danger"
-                    className="w-full"
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Clear Schedule
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Progression Status */}
-            {progression && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Progression Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Current Round:</span>
-                    <Badge variant="info">{progression.currentRound && progression.currentRound.trim() !== '' ? progression.currentRound : 'Not Started'}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Status:</span>
-                    <Badge variant={progression.status && progression.status === 'active' ? 'default' : 'info'}>
-                      {progression.status && progression.status.trim() !== '' ? progression.status : 'Unknown'}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total Rounds:</span>
-                    <Badge variant="default">{Array.isArray(progression.rounds) ? progression.rounds.length : 0}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Tournament Progression
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2">Loading tournament progression...</span>
           </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
-          {/* Right Column - Matches Table */}
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Matches for {selectedRound && selectedRound.trim() !== '' ? selectedRound : 'Select a Round'}
-                  {matchesCount > 0 && (
-                    <Badge variant="info" className="ml-2">
-                      {matchesCount} matches
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Tournament Progression - {tournamentTitle}
+          </CardTitle>
+          <CardDescription>
+            Manage tournament rounds, matches, and progression
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {!tournament?.rounds || tournament.rounds.length === 0 ? (
+            <div className="text-center py-8">
+              <Trophy className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Tournament Not Initialized</h3>
+              <p className="text-gray-600 mb-4">
+                Initialize the tournament progression to create rounds and matches based on registered participants.
+              </p>
+              <Button onClick={initializeTournament} disabled={updating}>
+                {updating ? 'Initializing...' : 'Initialize Tournament'}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Tournament Overview */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Tournament Status</h3>
+                    <p className="text-sm text-gray-600">
+                      Current Round: {tournament.currentRound || 'Not Started'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span className="text-sm">
+                        {tournament.totalParticipants} / {tournament.maxParticipants} Participants
+                      </span>
+                    </div>
+                    <Badge variant={tournament.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                      {tournament.status}
                     </Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {selectedRound && selectedRound.trim() !== '' ? (
-                  matchesCount > 0 ? (
-                    <div className="space-y-3">
-                      {safeMatches.map((match) => (
-                        <div key={match.id || `match-${Math.random()}`} className="border rounded-lg p-3">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-medium text-gray-600">
-                              Match {match.id || 'Unknown'}
-                            </span>
-                            <Badge variant={match.isCompleted === true ? 'default' : 'info'}>
-                              {match.isCompleted === true ? 'Completed' : 'Pending'}
-                            </Badge>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-sm">
-                              <span className="font-medium">Players:</span> {Array.isArray(match.players) ? match.players.join(' vs ') : 'Unknown'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rounds */}
+              {tournament.rounds.map((round) => (
+                <Card key={round.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{round.name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        {getRoundStatusBadge(round)}
+                        {tournament.currentRound === round.name && 
+                         round.matches.every(m => m.isCompleted) && 
+                         !round.isCompleted && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => advanceRound(round.name)}
+                            disabled={updating}
+                          >
+                            <ArrowRight className="h-3 w-3 mr-1" />
+                            Advance Round
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <CardDescription>
+                      {round.matches.length} matches 
+                      {round.isCompleted && round.completedAt && (
+                        <span className="ml-2">
+                          • Completed {new Date(round.completedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {round.matches.map((match) => (
+                        <Card 
+                          key={match.id} 
+                          className={`cursor-pointer transition-colors ${
+                            !match.isCompleted && match.player1 && match.player2 
+                              ? 'hover:bg-gray-50' 
+                              : ''
+                          }`}
+                          onClick={() => !match.isCompleted && match.player1 && match.player2 && openMatchDialog(match)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-mono text-sm text-gray-600">
+                                {match.matchCode}
+                              </span>
+                              {getMatchStatusBadge(match)}
                             </div>
-                            {match.winner && match.winner.trim() !== '' && (
-                              <div className="text-sm">
-                                <span className="font-medium">Winner:</span> {match.winner}
+                            
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className={`text-sm ${match.winner === match.player1 ? 'font-semibold' : ''}`}>
+                                  {match.player1 || 'TBD'}
+                                </span>
+                                {match.winner === match.player1 && (
+                                  <Trophy className="h-3 w-3 text-yellow-500" />
+                                )}
                               </div>
-                            )}
-                          </div>
-                        </div>
+                              
+                              <div className="text-center text-xs text-gray-500">vs</div>
+                              
+                              <div className="flex items-center justify-between">
+                                <span className={`text-sm ${match.winner === match.player2 ? 'font-semibold' : ''}`}>
+                                  {match.player2 || 'TBD'}
+                                </span>
+                                {match.winner === match.player2 && (
+                                  <Trophy className="h-3 w-3 text-yellow-500" />
+                                )}
+                              </div>
+                              
+                              {match.score && (
+                                <div className="text-center text-xs text-gray-600 mt-2 font-mono">
+                                  {match.score}
+                                </div>
+                              )}
+                              
+                              {match.judge && (
+                                <div className="text-xs text-gray-500 text-center">
+                                  Judge: {match.judge.fullName}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No matches found for this round
-                    </div>
-                  )
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Please select a round to view matches
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-            {/* Debug Info */}
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle className="text-sm">Debug Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs text-gray-600 space-y-1">
-                  <div>Tournament ID: {tournamentId || 'Not specified'}</div>
-                  <div>Selected Round: {selectedRound && selectedRound.trim() !== '' ? selectedRound : 'None'}</div>
-                  <div>Matches Count: {matchesCount}</div>
-                  <div>Progression Status: {progression?.status && progression.status.trim() !== '' ? progression.status : 'Unknown'}</div>
-                  <div>CSRF Token: {csrfToken && csrfToken.length >= 8 ? csrfToken.substring(0, 8) + '...' : 'Not set'}</div>
+      {/* Match Result Dialog */}
+      <Dialog open={!!selectedMatch} onOpenChange={() => setSelectedMatch(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Match Result</DialogTitle>
+          </DialogHeader>
+          {selectedMatch && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-3 rounded">
+                <div className="font-medium text-center">{selectedMatch.matchCode}</div>
+                <div className="text-sm text-center text-gray-600 mt-1">
+                  {selectedMatch.player1} vs {selectedMatch.player2}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="winner">Winner</Label>
+                <Select value={matchResult.winner} onValueChange={(value) => setMatchResult(prev => ({ ...prev, winner: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select winner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedMatch.player1 && (
+                      <SelectItem value={selectedMatch.player1}>{selectedMatch.player1}</SelectItem>
+                    )}
+                    {selectedMatch.player2 && (
+                      <SelectItem value={selectedMatch.player2}>{selectedMatch.player2}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="score">Score</Label>
+                <Input
+                  id="score"
+                  value={matchResult.score}
+                  onChange={(e) => setMatchResult(prev => ({ ...prev, score: e.target.value }))}
+                  placeholder="e.g., 21-15, 21-18"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={updateMatchResult} 
+                  disabled={!matchResult.winner || !matchResult.score || updating}
+                  className="flex-1"
+                >
+                  {updating ? 'Updating...' : 'Update Result'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSelectedMatch(null)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
