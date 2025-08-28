@@ -37,7 +37,7 @@ export default function OrganizerTournaments() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
   const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([])
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function OrganizerTournaments() {
       )
     }
 
-    if (statusFilter) {
+    if (statusFilter && statusFilter !== 'ALL') {
       filtered = filtered.filter(t => t.status === statusFilter)
     }
 
@@ -191,7 +191,7 @@ export default function OrganizerTournaments() {
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="ALL">All Statuses</SelectItem>
                     <SelectItem value="DRAFT">Draft</SelectItem>
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="COMPLETED">Completed</SelectItem>
