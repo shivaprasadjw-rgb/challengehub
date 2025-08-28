@@ -76,7 +76,7 @@ export default function TournamentProgression({
     try {
       setLoading(true)
       const response = await fetch(`/api/organizer/${organizerSlug}/tournaments/${tournamentId}/progression`)
-      
+
       if (response.ok) {
         const data = await response.json()
         setTournament(data.tournament)
@@ -223,28 +223,28 @@ export default function TournamentProgression({
   }
 
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
+  return (
+            <Card>
+              <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5" />
             Tournament Progression
           </CardTitle>
-        </CardHeader>
+              </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <span className="ml-2">Loading tournament progression...</span>
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+              </CardContent>
+            </Card>
     )
   }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
+              <Card>
+                <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5" />
             Tournament Progression - {tournamentTitle}
@@ -252,7 +252,7 @@ export default function TournamentProgression({
           <CardDescription>
             Manage tournament rounds, matches, and progression
           </CardDescription>
-        </CardHeader>
+                </CardHeader>
         <CardContent>
           {error && (
             <Alert className="mb-4">
@@ -295,7 +295,7 @@ export default function TournamentProgression({
                     </Badge>
                   </div>
                 </div>
-              </div>
+                  </div>
 
               {/* Rounds */}
               {tournament.rounds.map((round) => (
@@ -316,8 +316,8 @@ export default function TournamentProgression({
                             <ArrowRight className="h-3 w-3 mr-1" />
                             Advance Round
                           </Button>
-                        )}
-                      </div>
+            )}
+          </div>
                     </div>
                     <CardDescription>
                       {round.matches.length} matches 
@@ -327,8 +327,8 @@ export default function TournamentProgression({
                         </span>
                       )}
                     </CardDescription>
-                  </CardHeader>
-                  <CardContent>
+              </CardHeader>
+              <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {round.matches.map((match) => (
                         <Card 
@@ -344,7 +344,7 @@ export default function TournamentProgression({
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-mono text-sm text-gray-600">
                                 {match.matchCode}
-                              </span>
+                            </span>
                               {getMatchStatusBadge(match)}
                             </div>
                             
@@ -366,8 +366,8 @@ export default function TournamentProgression({
                                 </span>
                                 {match.winner === match.player2 && (
                                   <Trophy className="h-3 w-3 text-yellow-500" />
-                                )}
-                              </div>
+                            )}
+                          </div>
                               
                               {match.score && (
                                 <div className="text-center text-xs text-gray-600 mt-2 font-mono">
@@ -380,7 +380,7 @@ export default function TournamentProgression({
                                   Judge: {match.judge.fullName}
                                 </div>
                               )}
-                            </div>
+                        </div>
                           </CardContent>
                         </Card>
                       ))}
@@ -388,10 +388,10 @@ export default function TournamentProgression({
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
       {/* Match Result Dialog */}
       <Dialog open={!!selectedMatch} onOpenChange={() => setSelectedMatch(null)}>
@@ -433,7 +433,7 @@ export default function TournamentProgression({
                   onChange={(e) => setMatchResult(prev => ({ ...prev, score: e.target.value }))}
                   placeholder="e.g., 21-15, 21-18"
                 />
-              </div>
+          </div>
               
               <div className="flex gap-2">
                 <Button 
@@ -450,8 +450,8 @@ export default function TournamentProgression({
                 >
                   Cancel
                 </Button>
-              </div>
-            </div>
+        </div>
+      </div>
           )}
         </DialogContent>
       </Dialog>

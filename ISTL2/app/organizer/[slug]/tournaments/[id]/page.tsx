@@ -86,29 +86,6 @@ export default function TournamentDetail() {
     }
   }
 
-  const updateTournamentStatus = async (newStatus: string) => {
-    try {
-      const response = await fetch(`/api/organizer/${organizerSlug}/tournaments/${tournamentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      })
-
-      if (response.ok) {
-        // Refresh tournament data
-        await fetchTournament()
-        alert(`Tournament ${newStatus.toLowerCase()} successfully!`)
-      } else {
-        throw new Error('Failed to update tournament status')
-      }
-    } catch (error) {
-      console.error('Error updating tournament status:', error)
-      alert('Failed to update tournament status')
-    }
-  }
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
@@ -366,31 +343,20 @@ export default function TournamentDetail() {
                   </Button>
                 </Link>
                 
-                <Button 
-                  className="w-full justify-start" 
-                  variant="outline"
-                  onClick={() => window.open(`/organizer/${organizerSlug}/tournaments/${tournamentId}/reports`, '_blank')}
-                >
+                <Button className="w-full justify-start" variant="outline">
                   <FileText className="h-4 w-4 mr-2" />
                   View Reports
                 </Button>
                 
                 {tournament.status === 'DRAFT' && (
-                  <Button 
-                    className="w-full justify-start"
-                    onClick={() => updateTournamentStatus('ACTIVE')}
-                  >
+                  <Button className="w-full justify-start">
                     <Trophy className="h-4 w-4 mr-2" />
                     Activate Tournament
                   </Button>
                 )}
                 
                 {tournament.status === 'ACTIVE' && (
-                  <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
-                    onClick={() => updateTournamentStatus('COMPLETED')}
-                  >
+                  <Button className="w-full justify-start" variant="outline">
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule Matches
                   </Button>
