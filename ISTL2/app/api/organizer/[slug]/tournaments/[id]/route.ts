@@ -48,14 +48,14 @@ export async function GET(
         registrations: {
           select: {
             id: true,
-            fullName: true,
-            email: true,
-            phone: true,
-            playerSkillLevel: true,
-            createdAt: true
+            playerName: true,
+            playerEmail: true,
+            playerPhone: true,
+            playerCategory: true,
+            registeredAt: true
           },
           orderBy: {
-            createdAt: 'desc'
+            registeredAt: 'desc'
           }
         }
       }
@@ -76,7 +76,14 @@ export async function GET(
       currentParticipants: tournament.registrations.length,
       entryFee: tournament.entryFee,
       venue: tournament.venue,
-      registrations: tournament.registrations
+      registrations: tournament.registrations.map(reg => ({
+        id: reg.id,
+        fullName: reg.playerName,
+        email: reg.playerEmail,
+        phone: reg.playerPhone,
+        playerSkillLevel: reg.playerCategory,
+        createdAt: reg.registeredAt
+      }))
     }
 
     return NextResponse.json({
