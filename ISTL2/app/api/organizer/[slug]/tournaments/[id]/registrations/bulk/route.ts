@@ -110,12 +110,28 @@ async function handleJSONData(req: NextRequest, tournamentId: string, adminUser:
           continue
         }
 
+        // Create or get user first (since Registration has foreign key to User)
+        const email = registration.playerEmail.trim().toLowerCase()
+        let user = await prisma.user.findUnique({
+          where: { email }
+        })
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email,
+              name: registration.playerName.trim(),
+              role: 'PLAYER'
+            }
+          })
+        }
+
         // Create registration
         await prisma.registration.create({
           data: {
             tournamentId,
             playerName: registration.playerName.trim(),
-            playerEmail: registration.playerEmail.trim().toLowerCase(),
+            playerEmail: email,
             playerPhone: registration.playerPhone.trim(),
             playerAge: parseInt(registration.playerAge.toString()),
             playerGender: registration.playerGender,
