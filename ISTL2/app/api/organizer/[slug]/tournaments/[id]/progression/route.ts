@@ -171,9 +171,27 @@ async function initializeTournamentProgression(tournamentId: string, adminUser: 
       return NextResponse.json({ error: 'No participants found' }, { status: 400 })
     }
 
-    // Create tournament rounds
+    // Create tournament rounds based on participant count
+    const participantCount = registrations.length
+    let firstRoundName = 'Round of 16'
+    let firstRoundMatches = 8
+    
+    if (participantCount > 16) {
+      firstRoundName = 'Round of 32'
+      firstRoundMatches = 16
+    } else if (participantCount > 8) {
+      firstRoundName = 'Round of 16'
+      firstRoundMatches = 8
+    } else if (participantCount > 4) {
+      firstRoundName = 'Quarterfinal'
+      firstRoundMatches = 4
+    } else if (participantCount > 2) {
+      firstRoundName = 'Semifinal'
+      firstRoundMatches = 2
+    }
+    
     const rounds = [
-      { name: 'Round of 32', order: 1, maxMatches: 16 },
+      { name: firstRoundName, order: 1, maxMatches: firstRoundMatches },
       { name: 'Round of 16', order: 2, maxMatches: 8 },
       { name: 'Quarterfinal', order: 3, maxMatches: 4 },
       { name: 'Semifinal', order: 4, maxMatches: 2 },
@@ -203,9 +221,9 @@ async function initializeTournamentProgression(tournamentId: string, adminUser: 
       )
     )
 
-    // Generate Round of 32 matches
-    const round32 = createdRounds.find(r => r.name === 'Round of 32')
-    if (round32) {
+    // Generate first round matches
+    const firstRound = createdRounds.find(r => r.name === firstRoundName)
+    if (firstRound) {
       const matches = []
       const participants = [...registrations]
       
@@ -215,16 +233,28 @@ async function initializeTournamentProgression(tournamentId: string, adminUser: 
         [participants[i], participants[j]] = [participants[j], participants[i]]
       }
 
-      // Create matches (up to 32 participants)
-      for (let i = 0; i < Math.min(participants.length, 32); i += 2) {
+      // Create matches for the first round
+      for (let i = 0; i < Math.min(participants.length, firstRoundMatches * 2); i += 2) {
         const matchNumber = Math.floor(i / 2) + 1
         const player1 = participants[i]?.playerName || 'BYE'
         const player2 = participants[i + 1]?.playerName || 'BYE'
 
+        // Generate match code based on first round name
+        let matchCode = ''
+        if (firstRoundName === 'Round of 32') {
+          matchCode = `R32-M${matchNumber.toString().padStart(2, '0')}`
+        } else if (firstRoundName === 'Round of 16') {
+          matchCode = `R16-M${matchNumber.toString().padStart(2, '0')}`
+        } else if (firstRoundName === 'Quarterfinal') {
+          matchCode = `QF-M${matchNumber.toString().padStart(2, '0')}`
+        } else if (firstRoundName === 'Semifinal') {
+          matchCode = `SF-M${matchNumber.toString().padStart(2, '0')}`
+        }
+
         matches.push({
           tournamentId,
-          roundId: round32.id,
-          matchCode: `R32-M${matchNumber.toString().padStart(2, '0')}`,
+          roundId: firstRound.id,
+          matchCode,
           player1,
           player2: player1 === 'BYE' ? null : player2
         })
@@ -239,7 +269,7 @@ async function initializeTournamentProgression(tournamentId: string, adminUser: 
     await prisma.tournament.update({
       where: { id: tournamentId },
       data: {
-        currentRound: 'Round of 32',
+        currentRound: firstRoundName,
         status: 'ACTIVE'
       }
     })
@@ -442,6 +472,21 @@ function getNextRoundName(currentRound: string): string | null {
     '3rd Place Match': null, // 3rd Place Match doesn't advance further
     'Final': null // Final doesn't advance further
   }
+  
+  // Handle dynamic first round names
+  if (currentRound.includes('Round of')) {
+    const participantCount = parseInt(currentRound.split(' ')[2])
+    if (participantCount > 16) {
+      return 'Round of 16'
+    } else if (participantCount > 8) {
+      return 'Quarterfinal'
+    } else if (participantCount > 4) {
+      return 'Semifinal'
+    } else if (participantCount > 2) {
+      return 'Final'
+    }
+  }
+  
   return progression[currentRound] || null
 }
 
@@ -465,7 +510,8 @@ async function generateNextRoundMatches(tournamentId: string, completedMatches: 
     const player1 = winners[i]
     const player2 = winners[i + 1] || 'BYE'
 
-    const roundCode = nextRoundName === 'Round of 16' ? 'R16' :
+    const roundCode = nextRoundName === 'Round of 32' ? 'R32' :
+                     nextRoundName === 'Round of 16' ? 'R16' :
                      nextRoundName === 'Quarterfinal' ? 'QF' :
                      nextRoundName === 'Semifinal' ? 'SF' :
                      nextRoundName === 'Final' ? 'F' : 'M'
