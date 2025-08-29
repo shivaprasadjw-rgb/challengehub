@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -53,10 +53,16 @@ export default function SuperAdminNav({ currentPage = 'dashboard' }: SuperAdminN
               ))}
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-700">
               Welcome, {session?.user?.name || 'Admin'}
             </span>
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth/login' })}
+              className="text-sm text-red-600 hover:text-red-800 font-medium"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
