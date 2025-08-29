@@ -24,7 +24,7 @@ export default function LoginPage() {
     
     if (session?.user) {
       if (session.user.role === 'SUPER_ADMIN') {
-        router.push('/admin/dashboard')
+        router.push('/super-admin')
       } else if (session.user.organizerIds?.length > 0) {
         router.push(`/organizer/${session.user.organizerIds[0].slug}/dashboard`)
       } else {
@@ -60,7 +60,7 @@ export default function LoginPage() {
             console.log('Session after login:', session)
             
             if (session?.user?.role === 'SUPER_ADMIN') {
-              router.push('/admin/dashboard')
+              router.push('/super-admin')
             } else if (session?.user?.organizerIds?.length > 0) {
               router.push(`/organizer/${session.user.organizerIds[0].slug}/dashboard`)
             } else {
