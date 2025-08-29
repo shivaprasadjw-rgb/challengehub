@@ -14,7 +14,13 @@ export async function GET(request: NextRequest) {
     // Count total registrations
     const count = await prisma.registration.count();
 
-    return NextResponse.json({ count });
+    return NextResponse.json({ 
+      count,
+      _deprecated: {
+        message: 'This endpoint is deprecated. Use /api/super-admin/analytics/stats instead',
+        newEndpoint: '/api/super-admin/analytics/stats'
+      }
+    });
   } catch (error) {
     console.error('Error counting registrations:', error);
     return NextResponse.json(
