@@ -328,6 +328,9 @@ async function updateMatchResult(matchId: string, winner: string, score: string,
       }
     })
 
+    // Check if all matches in this round are completed and update round status
+    await checkAndUpdateRoundStatus(match.roundId, adminUser)
+
     // Create audit log
     await prisma.auditLog.create({
       data: {
@@ -564,5 +567,51 @@ async function generate3rdPlaceMatch(tournamentId: string, semifinalMatches: any
     await prisma.match.create({
       data: match
     })
+  }
+}
+
+async function checkAndUpdateRoundStatus(roundId: string, adminUser: string) {
+  try {
+    // Get the round with all its matches
+    const round = await prisma.tournamentRound.findUnique({
+      where: { id: roundId },
+      include: {
+        matches: true
+      }
+    })
+
+    if (!round) return
+
+    // Count total matches and completed matches
+    const totalMatches = round.matches.length
+    const completedMatches = round.matches.filter(match => match.isCompleted).length
+
+    // If all matches are completed, mark the round as completed
+    if (totalMatches > 0 && completedMatches === totalMatches) {
+      await prisma.tournamentRound.update({
+        where: { id: roundId },
+        data: {
+          isCompleted: true,
+          completedAt: new Date(),
+          completedBy: adminUser
+        }
+      })
+
+      console.log(`✅ Round "${round.name}" marked as completed (${completedMatches}/${totalMatches} matches)`)
+
+      // Special case: If this is the Final round and it's completed, mark tournament as completed
+      if (round.name === 'Final') {
+        await prisma.tournament.update({
+          where: { id: round.tournamentId },
+          data: {
+            status: 'COMPLETED',
+            currentRound: 'Tournament Completed'
+          }
+        })
+        console.log('🏆 Tournament marked as completed!')
+      }
+    }
+  } catch (error) {
+    console.error('Error checking and updating round status:', error)
   }
 }
