@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Plus, Users, Edit, Trash2, ArrowLeft, Award } from 'lucide-react'
 import Link from 'next/link'
+import { OrganizerNav } from '@/components/OrganizerNav'
 
 interface Judge {
   id: string
@@ -188,237 +189,241 @@ export default function OrganizerJudges() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <Link href={`/organizer/${organizerSlug}/dashboard`}>
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Manage Judges</h1>
-              <p className="mt-2 text-gray-600">Add and manage judges for your tournaments</p>
+    <div className="min-h-screen bg-gray-50">
+      <OrganizerNav currentPage="judges" />
+      
+      <div className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center space-x-4 mb-4">
+              <Link href={`/organizer/${organizerSlug}/dashboard`}>
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
             </div>
-            <Button
-              onClick={() => setShowAddForm(true)}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Judge
-            </Button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Manage Judges</h1>
+                <p className="mt-2 text-gray-600">Add and manage judges for your tournaments</p>
+              </div>
+              <Button
+                onClick={() => setShowAddForm(true)}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Judge
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        {/* Add/Edit Form */}
-        {showAddForm && (
-          <Card className="mb-8">
+          {/* Add/Edit Form */}
+          {showAddForm && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>
+                  {editingJudge ? 'Edit Judge' : 'Add New Judge'}
+                </CardTitle>
+                <CardDescription>
+                  {editingJudge ? 'Update judge information' : 'Enter judge details below'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Judge Name *</Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="e.g., John Smith"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="e.g., john@example.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        required
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="e.g., +91 98765 43210"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="gender">Gender *</Label>
+                      <select
+                        id="gender"
+                        name="gender"
+                        required
+                        value={formData.gender}
+                        onChange={handleChange}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Select gender</option>
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                        <option value="OTHER">Other</option>
+                        <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="specialties">Specialties *</Label>
+                    <Input
+                      id="specialties"
+                      name="specialties"
+                      type="text"
+                      required
+                      value={formData.specialties}
+                      onChange={handleChange}
+                      placeholder="e.g., Badminton, Tennis, Cricket (comma-separated)"
+                    />
+                    <p className="text-sm text-gray-500">
+                      Enter multiple specialties separated by commas
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      name="bio"
+                      rows={4}
+                      value={formData.bio}
+                      onChange={handleChange}
+                      placeholder="Brief description of the judge's background, qualifications, etc."
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={resetForm}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      {editingJudge ? 'Update Judge' : 'Add Judge'}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Judges List */}
+          <Card>
             <CardHeader>
-              <CardTitle>
-                {editingJudge ? 'Edit Judge' : 'Add New Judge'}
-              </CardTitle>
+              <CardTitle>Your Judges</CardTitle>
               <CardDescription>
-                {editingJudge ? 'Update judge information' : 'Enter judge details below'}
+                {judges.length} judge{judges.length !== 1 ? 's' : ''} available
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Judge Name *</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="e.g., John Smith"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="e.g., john@example.com"
-                    />
-                  </div>
+              {judges.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2">No judges yet</p>
+                  <p className="text-sm">Add your first judge to get started</p>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="e.g., +91 98765 43210"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender *</Label>
-                    <select
-                      id="gender"
-                      name="gender"
-                      required
-                      value={formData.gender}
-                      onChange={handleChange}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              ) : (
+                <div className="space-y-4">
+                  {judges.map((judge) => (
+                    <div
+                      key={judge.id}
+                      className="border rounded-lg p-4 flex items-center justify-between"
                     >
-                      <option value="">Select gender</option>
-                      <option value="MALE">Male</option>
-                      <option value="FEMALE">Female</option>
-                      <option value="OTHER">Other</option>
-                      <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
-                    </select>
-                  </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className="font-medium text-lg">{judge.fullName}</h3>
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ACTIVE
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          ✉️ {judge.email} • 📞 {judge.phone}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          🏆 {judge.categories.length} specialties
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {judge.categories.map((category, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                            >
+                              {category}
+                            </span>
+                          ))}
+                        </div>
+                        {judge.bio && (
+                          <p className="text-sm text-gray-600 mt-2">
+                            {judge.bio}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => handleEdit(judge)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(judge.id)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="specialties">Specialties *</Label>
-                  <Input
-                    id="specialties"
-                    name="specialties"
-                    type="text"
-                    required
-                    value={formData.specialties}
-                    onChange={handleChange}
-                    placeholder="e.g., Badminton, Tennis, Cricket (comma-separated)"
-                  />
-                  <p className="text-sm text-gray-500">
-                    Enter multiple specialties separated by commas
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    rows={4}
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder="Brief description of the judge's background, qualifications, etc."
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={resetForm}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    {editingJudge ? 'Update Judge' : 'Add Judge'}
-                  </Button>
-                </div>
-              </form>
+              )}
             </CardContent>
           </Card>
-        )}
-
-        {/* Judges List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Judges</CardTitle>
-            <CardDescription>
-              {judges.length} judge{judges.length !== 1 ? 's' : ''} available
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {judges.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-2">No judges yet</p>
-                <p className="text-sm">Add your first judge to get started</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {judges.map((judge) => (
-                  <div
-                    key={judge.id}
-                    className="border rounded-lg p-4 flex items-center justify-between"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="font-medium text-lg">{judge.fullName}</h3>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          ACTIVE
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        ✉️ {judge.email} • 📞 {judge.phone}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        🏆 {judge.categories.length} specialties
-                      </p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {judge.categories.map((category, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                          >
-                            {category}
-                          </span>
-                        ))}
-                      </div>
-                      {judge.bio && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          {judge.bio}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => handleEdit(judge)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(judge.id)}
-                        variant="destructive"
-                        size="sm"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
     </div>
   )

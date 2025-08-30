@@ -1,41 +1,49 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token
+    const path = req.nextUrl.pathname
 
-  // Security Headers
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  
-  // Content Security Policy
-  response.headers.set('Content-Security-Policy', 
-    "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-    "style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data: https:; " +
-    "font-src 'self'; " +
-    "connect-src 'self'; " +
-    "frame-ancestors 'none';"
-  );
+    // If no token, redirect to login
+    if (!token) {
+      return NextResponse.redirect(new URL('/auth/login', req.url))
+    }
 
-  // Rate limiting for API endpoints
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
-    const rateLimitKey = `rate_limit:${ip}:${request.nextUrl.pathname}`;
-    
-    // Simple in-memory rate limiting (in production, use Redis)
-    // This is a basic implementation - consider using a proper rate limiting library
+    // Protect organizer routes
+    if (path.startsWith('/organizer/')) {
+      const organizerSlug = path.split('/')[2]
+      
+      // Check if user has access to this organizer
+      const hasAccess = token.organizerIds?.some((org: any) => org.slug === organizerSlug)
+      const isSuperAdmin = token.role === 'SUPER_ADMIN'
+      
+      if (!hasAccess && !isSuperAdmin) {
+        return NextResponse.redirect(new URL('/auth/login', req.url))
+      }
+    }
+
+    // Protect super admin routes
+    if (path.startsWith('/super-admin/')) {
+      if (token.role !== 'SUPER_ADMIN') {
+        return NextResponse.redirect(new URL('/auth/login', req.url))
+      }
+    }
+
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token
+    },
   }
-
-  return response;
-}
+)
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
-};
+    '/organizer/:path*',
+    '/super-admin/:path*',
+    '/dashboard/:path*'
+  ]
+}
