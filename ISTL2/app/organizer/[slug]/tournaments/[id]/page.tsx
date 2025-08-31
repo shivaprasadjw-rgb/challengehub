@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Trophy, MapPin, Users, Calendar, Edit, ArrowLeft, Settings, UserPlus, FileText } from 'lucide-react'
+import { AlertCircle, Trophy, MapPin, Users, Calendar, Edit, ArrowLeft, Settings, UserPlus, FileText, Trash2, AlertTriangle, Info } from 'lucide-react'
 import Link from 'next/link'
 import JudgeAssignment from '@/components/JudgeAssignment'
 import TournamentProgression from '@/components/TournamentProgression'
 import BulkRegistration from '@/components/BulkRegistration'
+import RegistrationManagement from '@/components/RegistrationManagement'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 interface Tournament {
   id: string
@@ -27,16 +29,19 @@ interface Tournament {
     id: string
     name: string
     city: string
-    locality: string
     state: string
+    locality: string
   }
   registrations: {
     id: string
-    fullName: string
-    email: string
-    phone: string
-    playerSkillLevel: string
-    createdAt: string
+    playerName: string
+    playerEmail: string
+    playerPhone: string
+    playerAge: number
+    playerGender: string
+    playerCategory: string
+    paymentStatus: string
+    registeredAt: string
   }[]
 }
 
@@ -46,10 +51,12 @@ export default function TournamentDetail() {
   const params = useParams()
   const organizerSlug = params.slug as string
   const tournamentId = params.id as string
-  
+
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -83,6 +90,31 @@ export default function TournamentDetail() {
       setError('Failed to load tournament')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!tournament) return
+    
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/organizer/${organizerSlug}/tournaments/${tournamentId}`, {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        // Redirect to tournaments list
+        router.push(`/organizer/${organizerSlug}/tournaments`)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to delete tournament')
+      }
+    } catch (error) {
+      console.error('Error deleting tournament:', error)
+      alert('Failed to delete tournament')
+    } finally {
+      setDeleting(false)
+      setShowDeleteDialog(false)
     }
   }
 
@@ -247,60 +279,17 @@ export default function TournamentDetail() {
               </Card>
             )}
 
-            {/* Registrations */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Registrations ({tournament.currentParticipants}/{tournament.maxParticipants})
-                </CardTitle>
-                <CardDescription>
-                  Manage tournament participants and registrations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
-                    <span>Registration Progress</span>
-                    <span>{Math.round(getRegistrationProgress())}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${getRegistrationProgress()}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {tournament.registrations.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <UserPlus className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-lg font-medium">No registrations yet</p>
-                    <p className="text-sm">Participants will appear here once they register</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {tournament.registrations.map((registration) => (
-                      <div key={registration.id} className="border rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium">{registration.fullName}</h4>
-                            <p className="text-sm text-gray-600">{registration.email}</p>
-                            <p className="text-sm text-gray-500">
-                              {registration.phone} • {registration.playerSkillLevel}
-                            </p>
-                          </div>
-                          <Badge variant="outline">
-                            {new Date(registration.createdAt).toLocaleDateString()}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Registration Management */}
+            <RegistrationManagement
+              organizerSlug={organizerSlug}
+              tournamentId={tournamentId}
+              tournamentTitle={tournament.title}
+              registrations={tournament.registrations}
+              maxParticipants={tournament.maxParticipants}
+              currentParticipants={tournament.currentParticipants}
+              tournamentStatus={tournament.status}
+              onRegistrationsUpdated={fetchTournament}
+            />
 
             {/* Bulk Registration Management */}
             <BulkRegistration 
@@ -360,6 +349,60 @@ export default function TournamentDetail() {
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule Matches
                   </Button>
+                )}
+
+                {/* Delete Tournament Button */}
+                {tournament.status === 'DRAFT' && tournament.currentParticipants === 0 && (
+                  <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full justify-start" variant="destructive">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Tournament
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-red-500" />
+                          Delete Tournament
+                        </DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to delete "{tournament.title}"? 
+                          <br /><br />
+                          <strong>This action cannot be undone.</strong>
+                          <br />
+                          Only draft tournaments with no registrations can be deleted.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          onClick={handleDelete}
+                          disabled={deleting}
+                        >
+                          {deleting ? 'Deleting...' : 'Delete Tournament'}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                {/* Show why tournament can't be deleted */}
+                {tournament.status !== 'DRAFT' && (
+                  <div className="text-sm text-gray-500 mt-2 p-2 bg-gray-50 rounded border-l-2 border-gray-300">
+                    <Info className="h-4 w-4 inline mr-1" />
+                    Cannot delete {tournament.status.toLowerCase()} tournaments
+                  </div>
+                )}
+
+                {tournament.currentParticipants > 0 && (
+                  <div className="text-sm text-gray-500 mt-2 p-2 bg-gray-50 rounded border-l-2 border-gray-300">
+                    <Users className="h-4 w-4 inline mr-1" />
+                    Cannot delete tournaments with registrations
+                  </div>
                 )}
               </CardContent>
             </Card>

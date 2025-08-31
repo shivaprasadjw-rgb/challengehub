@@ -28,7 +28,7 @@ export default function AdminDashboard() {
     }
 
     if (session?.user?.role !== 'SUPER_ADMIN') {
-      if (session?.user?.organizerIds?.length > 0) {
+      if (session?.user?.organizerIds && session.user.organizerIds.length > 0) {
         router.push(`/organizer/${session.user.organizerIds[0].slug}/dashboard`);
       } else {
         router.push('/dashboard');

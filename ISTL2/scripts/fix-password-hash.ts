@@ -21,7 +21,7 @@ async function fixPasswordHash() {
 
     console.log('✅ Found user:', user.email);
     console.log('📋 Current passwordHash:', user.passwordHash);
-    console.log(' Current password (plain text): newpass123');
+    console.log('�� Current password (plain text): newpass123');
 
     // Hash the password properly
     const hashedPassword = await bcrypt.hash('newpass123', 12);
@@ -46,8 +46,8 @@ async function fixPasswordHash() {
 
     if (isPasswordValid) {
       console.log('\n🎉 PASSWORD FIXED SUCCESSFULLY!');
-      console.log(' Login credentials: neworganizer@example.com / newpass123');
-      console.log(' Try logging in now at: http://localhost:3001/auth/login');
+      console.log('�� Login credentials: neworganizer@example.com / newpass123');
+      console.log('�� Try logging in now at: http://localhost:3001/auth/login');
     } else {
       console.log('❌ Password verification failed!');
     }

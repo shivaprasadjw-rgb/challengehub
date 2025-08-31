@@ -51,7 +51,10 @@ export async function GET(
             playerName: true,
             playerEmail: true,
             playerPhone: true,
+            playerAge: true,
+            playerGender: true,
             playerCategory: true,
+            paymentStatus: true,
             registeredAt: true
           },
           orderBy: {
@@ -78,11 +81,14 @@ export async function GET(
       venue: tournament.venue,
       registrations: tournament.registrations.map(reg => ({
         id: reg.id,
-        fullName: reg.playerName,
-        email: reg.playerEmail,
-        phone: reg.playerPhone,
-        playerSkillLevel: reg.playerCategory,
-        createdAt: reg.registeredAt
+        playerName: reg.playerName,
+        playerEmail: reg.playerEmail,
+        playerPhone: reg.playerPhone,
+        playerAge: reg.playerAge,
+        playerGender: reg.playerGender,
+        playerCategory: reg.playerCategory,
+        paymentStatus: reg.paymentStatus,
+        registeredAt: reg.registeredAt.toISOString()
       }))
     }
 

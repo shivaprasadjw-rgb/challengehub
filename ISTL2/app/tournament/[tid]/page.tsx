@@ -10,6 +10,34 @@ import TournamentScheduleTable from "@/components/TournamentScheduleTable";
 import ShareButtons from "@/components/ShareButtons";
 import type { Tournament } from "@/lib/types";
 
+interface Match {
+  id: string
+  matchCode: string
+  player1: string
+  player2: string
+  winner: string | null
+  score: string | null
+  isCompleted: boolean
+  scheduledAt: string | null
+  completedAt: string | null
+  courtNumber: number | null
+}
+
+interface Round {
+  id: string
+  name: string
+  order: number
+  maxMatches: number
+  isCompleted: boolean
+  completedAt: string | null
+  matches: Match[]
+}
+
+interface TournamentProgression {
+  currentRound: string | null
+  rounds: Round[]
+}
+
 export default function TournamentPage({ params }: { params: { tid: string } }) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -21,6 +49,7 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
   const [relatedTournaments, setRelatedTournaments] = useState<Array<{ id: string; name: string; date?: string; formattedDate: string }>>([]);
   const [currentCapacity, setCurrentCapacity] = useState(0);
   const [isCapacityFull, setIsCapacityFull] = useState(false);
+  const [progression, setProgression] = useState<TournamentProgression | null>(null);
 
   // Fetch tournament data from API
   useEffect(() => {
@@ -83,6 +112,19 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
         }
         
         setTournament(foundTournament);
+        
+        // Fetch tournament progression if tournament is completed
+        if (foundTournament.status === 'Completed') {
+          try {
+            const progressionResponse = await fetch(`/api/organizer/${foundTournament.organizer.name.toLowerCase().replace(/\s+/g, '-')}/tournaments/${foundTournament.id}/progression`);
+            if (progressionResponse.ok) {
+              const progressionData = await progressionResponse.json();
+              setProgression(progressionData);
+            }
+          } catch (progError) {
+            console.log('Progression data not available:', progError);
+          }
+        }
         
         // Set related tournaments
         const related = data.tournaments
@@ -254,6 +296,41 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
 
   const maps = googleMapsLink(tournament.venue);
 
+  const getWinner = () => {
+    if (!progression?.rounds) return null;
+    
+    // Find the final round
+    const finalRound = progression.rounds.find(round => 
+      round.name.toLowerCase().includes('final') && round.isCompleted
+    );
+    
+    if (finalRound) {
+      const finalMatch = finalRound.matches.find(match => match.isCompleted && match.winner);
+      return finalMatch?.winner || null;
+    }
+    
+    return null;
+  };
+
+  const getRunnerUp = () => {
+    if (!progression?.rounds) return null;
+    
+    // Find the final round
+    const finalRound = progression.rounds.find(round => 
+      round.name.toLowerCase().includes('final') && round.isCompleted
+    );
+    
+    if (finalRound) {
+      const finalMatch = finalRound.matches.find(match => match.isCompleted);
+      if (finalMatch && finalMatch.winner) {
+        // Return the loser (player1 or player2 who is not the winner)
+        return finalMatch.player1 === finalMatch.winner ? finalMatch.player2 : finalMatch.player1;
+      }
+    }
+    
+    return null;
+  };
+
   const handleCheckCompletion = async () => {
     try {
       const sessionId = localStorage.getItem('adminSessionId');
@@ -378,6 +455,100 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
           <TournamentCapacity tournamentId={tournament.id} tournamentStatus={tournament.status} maxSlots={32} />
         </div>
       </section>
+
+      {/* Tournament Results - Only show for completed tournaments */}
+      {tournament.status === 'Completed' && (getWinner() || getRunnerUp()) && (
+        <section className="card p-4 grid gap-3">
+          <h2 className="font-semibold flex items-center gap-2">
+            🏆 Tournament Results
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {getWinner() && (
+              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🏆</span>
+                  <div>
+                    <h3 className="font-semibold text-yellow-800">Winner</h3>
+                    <p className="text-lg font-bold text-yellow-900">{getWinner()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {getRunnerUp() && (
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🥈</span>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Runner-Up</h3>
+                    <p className="text-lg font-bold text-gray-900">{getRunnerUp()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Tournament Progression */}
+      {progression && progression.rounds && progression.rounds.length > 0 && (
+        <section className="card p-4 grid gap-3">
+          <h2 className="font-semibold flex items-center gap-2">
+            📊 Tournament Progression
+          </h2>
+          <div className="space-y-4">
+            {progression.rounds.map((round) => (
+              <div key={round.id} className="border rounded-lg p-3">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">{round.name}</h3>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    round.isCompleted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {round.isCompleted ? "Completed" : "In Progress"}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {round.matches.map((match) => (
+                    <div key={match.id} className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-sm text-gray-600 mb-2">
+                        Match {match.matchCode}
+                        {match.courtNumber && ` • Court ${match.courtNumber}`}
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">{match.player1}</span>
+                          {match.winner === match.player1 && (
+                            <span className="text-yellow-500">🏆</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">{match.player2}</span>
+                          {match.winner === match.player2 && (
+                            <span className="text-yellow-500">🏆</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {match.score && (
+                        <div className="mt-2 text-xs text-gray-500">
+                          Score: {match.score}
+                        </div>
+                      )}
+                      
+                      {match.isCompleted && match.completedAt && (
+                        <div className="mt-2 text-xs text-gray-500">
+                          Completed: {format(new Date(match.completedAt), 'MMM d, yyyy')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Match Schedule */}
       <section className="card p-4 grid gap-3">

@@ -305,18 +305,19 @@ export default function TournamentProgression({
                       <CardTitle className="text-lg">{round.name}</CardTitle>
                       <div className="flex items-center gap-2">
                         {getRoundStatusBadge(round)}
-                        {tournament.currentRound === round.name && 
-                         round.matches.every(m => m.isCompleted) && 
-                         !round.isCompleted && (
+                        {(tournament.currentRound === round.name || 
+                          (round.matches.length > 0 && round.matches.every(m => m.isCompleted) && !round.isCompleted)) && 
+                          round.name !== 'Final' && 
+                          tournament.status !== 'COMPLETED' && (
                           <Button 
                             size="sm" 
                             onClick={() => advanceRound(round.name)}
                             disabled={updating}
                           >
                             <ArrowRight className="h-3 w-3 mr-1" />
-                            Advance Round
+                            Advance to Next Round
                           </Button>
-            )}
+                        )}
           </div>
                     </div>
                     <CardDescription>
@@ -333,10 +334,10 @@ export default function TournamentProgression({
                       {round.matches.map((match) => (
                         <Card 
                           key={match.id} 
-                          className={`cursor-pointer transition-colors ${
+                          className={`transition-colors ${
                             !match.isCompleted && match.player1 && match.player2 
-                              ? 'hover:bg-gray-50' 
-                              : ''
+                              ? 'cursor-pointer hover:bg-gray-50' 
+                              : 'cursor-default'
                           }`}
                           onClick={() => !match.isCompleted && match.player1 && match.player2 && openMatchDialog(match)}
                         >

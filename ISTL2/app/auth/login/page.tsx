@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signIn, getSession, useSession } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,38 +39,17 @@ export default function LoginPage() {
     setError('')
 
     try {
-      console.log('Attempting login with:', { email, password })
-      
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       })
 
-      console.log('SignIn result:', result)
-
       if (result?.error) {
         setError('Invalid email or password')
-        console.error('Login error:', result.error)
       } else if (result?.ok) {
-        // Wait a moment for session to update
-        setTimeout(async () => {
-          try {
-            const session = await getSession()
-            console.log('Session after login:', session)
-            
-            if (session?.user?.role === 'SUPER_ADMIN') {
-              router.push('/super-admin')
-            } else if (session?.user?.organizerIds?.length > 0) {
-              router.push(`/organizer/${session.user.organizerIds[0].slug}/dashboard`)
-            } else {
-              router.push('/dashboard')
-            }
-          } catch (error) {
-            console.error('Error getting session:', error)
-            setError('Login successful but session error occurred')
-          }
-        }, 1000)
+        // Redirect will happen automatically via useEffect
+        setError('')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -125,13 +104,6 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
                 <Input
@@ -159,7 +131,14 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                 />
               </div>
-              
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <Button
                 type="submit"
                 className="w-full"
@@ -177,7 +156,7 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
-        
+
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
