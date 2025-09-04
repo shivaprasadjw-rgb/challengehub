@@ -58,54 +58,23 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
         setLoading(true);
         console.log('Fetching tournament with ID:', params.tid);
         
-        const response = await fetch(`/api/tournaments`);
+        // Use the new individual tournament API endpoint
+        const response = await fetch(`/api/tournaments/${params.tid}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch tournaments');
+          throw new Error('Failed to fetch tournament');
         }
         
         const data = await response.json();
         console.log('API response:', data);
         
         if (!data.success) {
-          throw new Error(data.error || 'Failed to fetch tournaments');
+          throw new Error(data.error || 'Failed to fetch tournament');
         }
         
-        const foundTournament = data.tournaments.find((t: Tournament) => {
-          const match = t.id.toUpperCase() === params.tid.toUpperCase();
-          console.log(`Comparing ${t.id} with ${params.tid}: ${match}`);
-          return match;
-        });
-        
+        const foundTournament = data.tournament;
         console.log('Found tournament:', foundTournament);
         
         if (!foundTournament) {
-          // Fallback: try to find in static data
-          console.log('Tournament not found in API, trying static data...');
-          const { tournaments: staticTournaments } = await import('@/lib/data');
-          const staticTournament = staticTournaments.find(t => 
-            t.id.toUpperCase() === params.tid.toUpperCase()
-          );
-          
-          if (staticTournament) {
-            console.log('Found tournament in static data:', staticTournament);
-            setTournament(staticTournament);
-            
-            // Set related tournaments from static data
-            const related = staticTournaments
-              .filter(t => 
-                (t.venue.city === staticTournament.venue.city || t.sport === staticTournament.sport) && 
-                t.id !== staticTournament.id
-              )
-              .slice(0, 4)
-              .map(t => ({
-                ...t,
-                formattedDate: t.date ? format(new Date(t.date), 'd MMMM, yyyy') : 'Date TBD'
-              }));
-            setRelatedTournaments(related);
-            setLoading(false);
-            return;
-          }
-          
           setError('Tournament not found');
           setLoading(false);
           return;
@@ -113,31 +82,33 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
         
         setTournament(foundTournament);
         
-        // Fetch tournament progression if tournament is completed
-        if (foundTournament.status === 'Completed') {
-          try {
-            const progressionResponse = await fetch(`/api/organizer/${foundTournament.organizer.name.toLowerCase().replace(/\s+/g, '-')}/tournaments/${foundTournament.id}/progression`);
-            if (progressionResponse.ok) {
-              const progressionData = await progressionResponse.json();
-              setProgression(progressionData);
-            }
-          } catch (progError) {
-            console.log('Progression data not available:', progError);
-          }
+        // Set progression data if available
+        if (foundTournament.progression) {
+          setProgression(foundTournament.progression);
         }
         
-        // Set related tournaments
-        const related = data.tournaments
-          .filter((t: Tournament) => 
-            (t.venue.city === foundTournament.venue.city || t.sport === foundTournament.sport) && 
-            t.id !== foundTournament.id
-          )
-          .slice(0, 4)
-          .map((t: Tournament) => ({
-            ...t,
-            formattedDate: t.date ? format(new Date(t.date), 'd MMMM, yyyy') : 'Date TBD'
-          }));
-        setRelatedTournaments(related);
+        // Fetch related tournaments
+        try {
+          const relatedResponse = await fetch('/api/tournaments');
+          if (relatedResponse.ok) {
+            const relatedData = await relatedResponse.json();
+            if (relatedData.success) {
+              const related = relatedData.tournaments
+                .filter((t: Tournament) => 
+                  (t.venue.city === foundTournament.venue.city || t.sport === foundTournament.sport) && 
+                  t.id !== foundTournament.id
+                )
+                .slice(0, 4)
+                .map((t: Tournament) => ({
+                  ...t,
+                  formattedDate: t.date ? format(new Date(t.date), 'd MMMM, yyyy') : 'Date TBD'
+                }));
+              setRelatedTournaments(related);
+            }
+          }
+        } catch (relatedError) {
+          console.log('Could not fetch related tournaments:', relatedError);
+        }
         
         // Automatically check and update tournament completion status (Feature #44)
         if (foundTournament.schedule.length > 0) {
@@ -176,13 +147,11 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
     
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/tournaments`);
+        const response = await fetch(`/api/tournaments/${params.tid}`);
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            const updatedTournament = data.tournaments.find((t: Tournament) => 
-              t.id.toUpperCase() === params.tid.toUpperCase()
-            );
+            const updatedTournament = data.tournament;
             
             if (updatedTournament) {
               // Check if schedule has changed (participants deleted)
@@ -200,18 +169,33 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
                 });
                 setTournament(updatedTournament);
                 
+                // Update progression data if available
+                if (updatedTournament.progression) {
+                  setProgression(updatedTournament.progression);
+                }
+                
                 // Update related tournaments
-                const related = data.tournaments
-                  .filter((t: Tournament) => 
-                    (t.venue.city === updatedTournament.venue.city || t.sport === updatedTournament.sport) && 
-                    t.id !== updatedTournament.id
-                  )
-                  .slice(0, 4)
-                  .map((t: Tournament) => ({
-                    ...t,
-                    formattedDate: t.date ? format(new Date(t.date), 'd MMMM, yyyy') : 'Date TBD'
-                  }));
-                setRelatedTournaments(related);
+                try {
+                  const relatedResponse = await fetch('/api/tournaments');
+                  if (relatedResponse.ok) {
+                    const relatedData = await relatedResponse.json();
+                    if (relatedData.success) {
+                      const related = relatedData.tournaments
+                        .filter((t: Tournament) => 
+                          (t.venue.city === updatedTournament.venue.city || t.sport === updatedTournament.sport) && 
+                          t.id !== updatedTournament.id
+                        )
+                        .slice(0, 4)
+                        .map((t: Tournament) => ({
+                          ...t,
+                          formattedDate: t.date ? format(new Date(t.date), 'd MMMM, yyyy') : 'Date TBD'
+                        }));
+                      setRelatedTournaments(related);
+                    }
+                  }
+                } catch (relatedError) {
+                  console.log('Could not fetch related tournaments:', relatedError);
+                }
               }
             }
           }
@@ -375,15 +359,16 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
             <button
               onClick={async () => {
                 try {
-                  const response = await fetch(`/api/tournaments`);
+                  const response = await fetch(`/api/tournaments/${params.tid}`);
                   if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                      const updatedTournament = data.tournaments.find((t: Tournament) => 
-                        t.id.toUpperCase() === params.tid.toUpperCase()
-                      );
+                      const updatedTournament = data.tournament;
                       if (updatedTournament) {
                         setTournament(updatedTournament);
+                        if (updatedTournament.progression) {
+                          setProgression(updatedTournament.progression);
+                        }
                         console.log('Tournament data manually refreshed');
                       }
                     }
@@ -550,29 +535,75 @@ export default function TournamentPage({ params }: { params: { tid: string } }) 
         </section>
       )}
 
-      {/* Match Schedule */}
-      <section className="card p-4 grid gap-3">
-        <h2 className="font-semibold">Schedule</h2>
-        {tournament.scheduleNote && (
-          <p className="text-sm text-slate-600">{tournament.scheduleNote}</p>
-        )}
-        
-        {/* Debug Info */}
-        <div className="p-2 bg-gray-100 rounded text-xs text-gray-600">
-          <strong>Debug:</strong> Schedule length: {tournament.schedule.length} | 
-          Last updated: {new Date().toLocaleTimeString()}
-        </div>
-        
-        {tournament.schedule.length === 0 ? (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
-            <div className="text-blue-600 text-lg mb-2">📋</div>
-            <p className="text-blue-800 font-medium">No participants registered yet</p>
-            <p className="text-blue-600 text-sm mt-1">The tournament schedule will appear here once participants register.</p>
+      {/* Completed Tournament Summary - Only show for completed tournaments */}
+      {tournament.status === 'Completed' && progression && progression.rounds && progression.rounds.length > 0 && (
+        <section className="card p-4 grid gap-3">
+          <h2 className="font-semibold flex items-center gap-2">
+            🏆 Tournament Results Summary
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {progression.rounds.map((round) => (
+              <div key={round.id} className="border rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  {round.name}
+                  {round.isCompleted && (
+                    <span className="text-green-600">✓</span>
+                  )}
+                </h3>
+                
+                {round.matches.length > 0 && (
+                  <div className="space-y-2">
+                    {round.matches.map((match) => (
+                      <div key={match.id} className="text-sm">
+                        <div className="font-medium text-gray-700">{match.matchCode}</div>
+                        <div className="text-gray-600">
+                          {match.player1} vs {match.player2}
+                        </div>
+                        {match.isCompleted && match.winner && (
+                          <div className="text-green-600 font-medium">
+                            Winner: {match.winner}
+                          </div>
+                        )}
+                        {match.score && (
+                          <div className="text-xs text-gray-500">
+                            Score: {match.score}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-        ) : (
-          <TournamentScheduleTable schedule={tournament.schedule} tournamentId={tournament.id} tournamentStatus={tournament.status} />
-        )}
-      </section>
+        </section>
+      )}
+
+      {/* Match Schedule - Only show for non-completed tournaments */}
+      {tournament.status !== 'Completed' && (
+        <section className="card p-4 grid gap-3">
+          <h2 className="font-semibold">Schedule</h2>
+          {tournament.scheduleNote && (
+            <p className="text-sm text-slate-600">{tournament.scheduleNote}</p>
+          )}
+          
+          {/* Debug Info */}
+          <div className="p-2 bg-gray-100 rounded text-xs text-gray-600">
+            <strong>Debug:</strong> Schedule length: {tournament.schedule.length} | 
+            Last updated: {new Date().toLocaleTimeString()}
+          </div>
+          
+          {tournament.schedule.length === 0 ? (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+              <div className="text-blue-600 text-lg mb-2">📋</div>
+              <p className="text-blue-800 font-medium">No participants registered yet</p>
+              <p className="text-blue-600 text-sm mt-1">The tournament schedule will appear here once participants register.</p>
+            </div>
+          ) : (
+            <TournamentScheduleTable schedule={tournament.schedule} tournamentId={tournament.id} tournamentStatus={tournament.status} />
+          )}
+        </section>
+      )}
 
       {/* Prizes & Awards */}
       <section className="card p-4 grid gap-2">

@@ -143,7 +143,14 @@ export default function TournamentScheduleTable({ schedule, tournamentId, tourna
         );
       }
       
-      const [left, right] = m.players.split(/\s+vs\s+/i).map(s => s.trim());
+      const parts = m.players.split(/\s+vs\s+/i).map(s => s.trim());
+      const left = parts[0];
+      const right = parts[1];
+      
+      // Safety check: ensure we have both left and right values
+      if (!left || !right) {
+        return <span className="text-gray-400">Invalid match format</span>;
+      }
       
       // If both sides are placeholders, resolve them
       if (left?.startsWith('W') && right?.startsWith('W')) {
@@ -156,7 +163,12 @@ export default function TournamentScheduleTable({ schedule, tournamentId, tourna
         );
       }
       
-      const renderName = (label: string, key: string) => {
+      const renderName = (label: string | undefined, key: string) => {
+        // Add null check for label
+        if (!label) {
+          return <span key={key} className="text-gray-400">Unknown</span>;
+        }
+        
         // Check if this is a real player name (not a placeholder)
         const rev = Object.entries(nameMap).find(([, v]) => v === label);
         if (rev) {
