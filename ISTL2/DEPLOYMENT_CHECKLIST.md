@@ -88,6 +88,7 @@ npx prisma db seed
 2. **Database Connection**: Verify DATABASE_URL format
 3. **Authentication**: Ensure NEXTAUTH_SECRET is set
 4. **API Errors**: Check function timeout settings
+5. **Vercel Configuration**: Ensure vercel.json doesn't have conflicting properties
 
 ### Debug Commands
 ```bash
