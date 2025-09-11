@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(PARTICIPANT)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Organizer {
+  id                String           @id @default(cuid())
+  name              String
+  slug              String           @unique
+  contact           Json
+  status            OrganizerStatus  @default(PENDING)
+  ownerUserId       String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@map("organizers")
+}
+
+model Tournament {
+  id              String           @id @default(cuid())
+  title           String
+  sport           String
+  date            DateTime?
+  entryFee        Int              @default(0)
+  maxParticipants Int              @default(32)
+  status          TournamentStatus @default(PENDING)
+  organizerId     String
+  venueId         String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("tournaments")
+}
+
+model Venue {
+  id        String   @id @default(cuid())
+  name      String
+  locality  String
+  city      String
+  state     String
+  pincode   String
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("venues")
+}
+
+model Registration {
+  id              String         @id @default(cuid())
+  tournamentId    String
+  playerName      String
+  playerEmail     String
+  playerPhone     String
+  playerAge       Int
+  playerGender    Gender
+  playerCategory  String
+  paymentStatus   PaymentStatus  @default(PENDING)
+  registeredAt    DateTime       @default(now())
+
+  @@map("registrations")
+}
+
+enum UserRole {
+  PARTICIPANT
+  ORGANIZER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum OrganizerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TournamentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
