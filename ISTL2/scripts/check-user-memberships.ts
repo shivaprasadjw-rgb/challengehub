@@ -61,7 +61,7 @@ async function checkUserMemberships() {
           }
         });
 
-        console.log('✅ Created membership:', membership.id);
+        console.log('✅ Created membership for user:', user.id, 'organizer:', organizer.id);
         console.log('�� User should now be able to login and access organizer dashboard!');
       } else {
         console.log('❌ Organizer not found either!');

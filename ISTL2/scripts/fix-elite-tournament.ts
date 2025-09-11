@@ -10,6 +10,10 @@ async function fixEliteTournament() {
     const tournament = await prisma.tournament.findFirst({
       where: {
         title: 'Elite Tennis Championship 2024'
+      },
+      include: {
+        rounds: true,
+        matches: true
       }
     });
 

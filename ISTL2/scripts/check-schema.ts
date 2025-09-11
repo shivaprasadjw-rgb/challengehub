@@ -18,21 +18,16 @@ async function checkSchema() {
     console.log('\n📋 UserOrganizer records:');
     memberships.forEach((membership, index) => {
       console.log(`\n${index + 1}. Membership:`);
-      console.log(`   ID: ${membership.id}`);
+      console.log(`   User ID: ${membership.userId}`);
+      console.log(`   Organizer ID: ${membership.organizerId}`);
       console.log(`   User: ${membership.user.email}`);
       console.log(`   Organizer: ${membership.organizer.name}`);
       console.log(`   Role: ${membership.role}`);
       console.log(`   Full object:`, JSON.stringify(membership, null, 2));
     });
 
-    // Check if there are any memberships with undefined IDs
-    const undefinedMemberships = await prisma.userOrganizer.findMany({
-      where: {
-        id: null
-      }
-    });
-
-    console.log(`\n❌ Memberships with null IDs: ${undefinedMemberships.length}`);
+    // Check if there are any memberships
+    console.log(`\n📊 Total memberships found: ${memberships.length}`);
 
   } catch (error) {
     console.error('❌ Error:', error);

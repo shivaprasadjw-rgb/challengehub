@@ -39,7 +39,7 @@ async function debugOrganizerSetup() {
     });
 
     if (membership) {
-      console.log('✅ Membership exists:', membership.id);
+      console.log('✅ Membership exists for user:', membership.userId, 'organizer:', membership.organizerId);
     } else {
       console.log('❌ No membership found');
       
@@ -53,7 +53,7 @@ async function debugOrganizerSetup() {
             role: 'OWNER'
           }
         });
-        console.log('✅ Membership created successfully:', newMembership.id);
+        console.log('✅ Membership created successfully for user:', newMembership.userId, 'organizer:', newMembership.organizerId);
       } catch (error) {
         console.error('❌ Failed to create membership:', error);
       }

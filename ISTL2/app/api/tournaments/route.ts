@@ -29,19 +29,19 @@ export async function GET() {
     const transformedTournaments = tournaments.map(tournament => ({
       id: tournament.id,
       name: tournament.title,
-      date: tournament.startDate?.toISOString().split('T')[0] || null,
+      date: tournament.date?.toISOString().split('T')[0] || null,
       status: tournament.status === 'COMPLETED' ? 'Completed' : 'Upcoming',
       sport: tournament.sport,
-      format: tournament.format || 'Singles',
-      category: tournament.category || 'Open Category',
+      format: 'Singles', // format field doesn't exist in schema
+      category: 'Open Category', // category field doesn't exist in schema
       entryFee: tournament.entryFee,
-      registrationDeadline: tournament.registrationDeadline?.toISOString().split('T')[0] || null,
+      registrationDeadline: null, // registrationDeadline field doesn't exist in schema
       maxParticipants: tournament.maxParticipants,
       currentParticipants: tournament.registrations.length,
       organizer: {
         name: tournament.organizer.name,
-        phone: tournament.organizer.phone,
-        email: tournament.organizer.email
+        phone: (tournament.organizer.contact as any)?.phone || null,
+        email: (tournament.organizer.contact as any)?.email || null
       },
       venue: tournament.venue ? {
         id: tournament.venue.id,
@@ -50,11 +50,10 @@ export async function GET() {
         city: tournament.venue.city,
         state: tournament.venue.state,
         pincode: tournament.venue.pincode,
-        lat: tournament.venue.lat,
-        lng: tournament.venue.lng
+        address: tournament.venue.address
       } : null,
       schedule: [],
-      prizes: tournament.prizePool ? [tournament.prizePool] : []
+      prizes: [] // prizePool field doesn't exist in schema
     }));
 
     return NextResponse.json({ success: true, tournaments: transformedTournaments });

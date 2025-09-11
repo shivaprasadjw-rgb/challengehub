@@ -37,7 +37,7 @@ async function fixMatchStatusesCorrect() {
             completedAt: new Date()
           }
         });
-        console.log(`✅ Fixed match: ${match.player1Name || 'Player 1'} vs ${match.player2Name || 'Player 2'}`);
+        console.log(`✅ Fixed match: ${match.player1 || 'Player 1'} vs ${match.player2 || 'Player 2'}`);
       }
     }
     

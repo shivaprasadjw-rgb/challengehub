@@ -69,20 +69,20 @@ export async function GET(
     const transformedTournament = {
       id: tournament.id,
       name: tournament.title,
-      date: tournament.startDate?.toISOString().split('T')[0] || null,
+      date: tournament.date?.toISOString().split('T')[0] || null,
       status: tournament.status === 'COMPLETED' ? 'Completed' : 
               tournament.status === 'ACTIVE' ? 'Upcoming' : tournament.status,
       sport: tournament.sport,
-      format: tournament.format || 'Singles',
-      category: tournament.category || 'Open Category',
+      format: 'Singles', // format field doesn't exist in schema
+      category: 'Open Category', // category field doesn't exist in schema
       entryFee: tournament.entryFee,
-      registrationDeadline: tournament.registrationDeadline?.toISOString().split('T')[0] || null,
+      registrationDeadline: null, // registrationDeadline field doesn't exist in schema
       maxParticipants: tournament.maxParticipants,
       currentParticipants: tournament.registrations.length,
       organizer: {
         name: tournament.organizer.name,
-        phone: tournament.organizer.phone,
-        email: tournament.organizer.email
+        phone: (tournament.organizer.contact as any)?.phone || null,
+        email: (tournament.organizer.contact as any)?.email || null
       },
       venue: tournament.venue ? {
         id: tournament.venue.id,
@@ -91,8 +91,7 @@ export async function GET(
         city: tournament.venue.city,
         state: tournament.venue.state,
         pincode: tournament.venue.pincode,
-        lat: tournament.venue.lat,
-        lng: tournament.venue.lng
+        address: tournament.venue.address
       } : null,
       schedule: tournament.status === 'COMPLETED' ? 
         // For completed tournaments, generate schedule from actual matches
@@ -100,7 +99,7 @@ export async function GET(
           round.matches.map(match => ({
             code: match.matchCode,
             date: match.scheduledAt ? new Date(match.scheduledAt).toISOString().split('T')[0] : 
-                   tournament.startDate?.toISOString().split('T')[0] || null,
+                   tournament.date?.toISOString().split('T')[0] || null,
             start: match.scheduledAt ? new Date(match.scheduledAt).toLocaleTimeString('en-US', { 
               hour: '2-digit', 
               minute: '2-digit',
@@ -120,13 +119,13 @@ export async function GET(
         // For non-completed tournaments, show registrations
         tournament.registrations.map((reg, index) => ({
           code: `P${index + 1}`,
-          date: tournament.startDate?.toISOString().split('T')[0] || null,
+          date: tournament.date?.toISOString().split('T')[0] || null,
           start: "TBD",
           end: "TBD",
           round: "Registration",
           players: reg.playerName
         })),
-      prizes: tournament.prizePool ? [tournament.prizePool] : ["Winner Trophy", "Runner-up Trophy"],
+      prizes: ["Winner Trophy", "Runner-up Trophy"], // prizePool field doesn't exist in schema
       // Add progression data for completed tournaments
       progression: tournament.status === 'COMPLETED' ? {
         currentRound: tournament.currentRound,

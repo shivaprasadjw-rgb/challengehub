@@ -29,7 +29,7 @@ async function checkTournamentProgressionStatus() {
       return;
     }
     
-    console.log(`\n🏆 Tournament: ${tournament.name}`);
+    console.log(`\n🏆 Tournament: ${tournament.title}`);
     console.log(`📊 Status: ${tournament.status}`);
     console.log(`🔄 Current Round: ${tournament.currentRound}`);
     console.log(`📈 Total Rounds: ${tournament.rounds.length}`);

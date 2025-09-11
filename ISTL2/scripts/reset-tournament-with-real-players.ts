@@ -77,7 +77,7 @@ async function resetTournamentWithRealPlayers() {
           playerEmail: player.email,
           playerPhone: `+91-${9000000000 + i}`, // Generate unique phone numbers
           playerAge: player.age,
-          playerGender: player.gender,
+          playerGender: player.gender as 'MALE' | 'FEMALE',
           playerCategory: player.category,
           paymentStatus: 'SUCCEEDED',
           registeredAt: new Date(Date.now() - (i * 60000)) // Staggered registration times

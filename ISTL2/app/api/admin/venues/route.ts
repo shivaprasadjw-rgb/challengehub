@@ -111,11 +111,11 @@ export async function POST(req: NextRequest) {
     // Log audit
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        actorUserId: session.user.id,
         action: 'CREATE',
-        resourceType: 'VENUE',
-        resourceId: venue.id,
-        details: { name: venue.name, city: venue.city, state: venue.state }
+        entityType: 'VENUE',
+        entityId: venue.id,
+        meta: { name: venue.name, city: venue.city, state: venue.state }
       }
     });
     
@@ -159,11 +159,11 @@ export async function PUT(req: NextRequest) {
     // Log audit
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        actorUserId: session.user.id,
         action: 'UPDATE',
-        resourceType: 'VENUE',
-        resourceId: id,
-        details: { name: updated.name, city: updated.city, state: updated.state }
+        entityType: 'VENUE',
+        entityId: id,
+        meta: { name: updated.name, city: updated.city, state: updated.state }
       }
     });
     
@@ -193,11 +193,11 @@ export async function DELETE(req: NextRequest) {
     // Log audit
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        actorUserId: session.user.id,
         action: 'DELETE',
-        resourceType: 'VENUE',
-        resourceId: id,
-        details: { archived: true }
+        entityType: 'VENUE',
+        entityId: id,
+        meta: { archived: true }
       }
     });
     

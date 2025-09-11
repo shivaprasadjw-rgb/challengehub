@@ -17,9 +17,7 @@ async function checkRegistrationComplete() {
         playerAge: 25,
         playerGender: 'MALE',
         paymentStatus: 'SUCCEEDED',
-        registeredAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
+        registeredAt: new Date()
       }
     });
     

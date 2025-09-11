@@ -30,9 +30,7 @@ async function createSampleTournament() {
           city: 'Mumbai',
           state: 'Maharashtra',
           pincode: '400058',
-          address: '123 Sports Complex, Andheri West, Mumbai - 400058',
-          lat: 19.1347,
-          lng: 72.8267
+          address: '123 Sports Complex, Andheri West, Mumbai - 400058'
         }
       })
       console.log('✅ Created sample venue:', venue.name)

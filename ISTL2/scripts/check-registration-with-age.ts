@@ -15,10 +15,9 @@ async function checkRegistrationWithAge() {
         playerPhone: '+91-98765-43210',
         playerCategory: 'SINGLES',
         playerAge: 25,
+        playerGender: 'MALE',
         paymentStatus: 'SUCCEEDED',
-        registeredAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
+        registeredAt: new Date()
       }
     });
     

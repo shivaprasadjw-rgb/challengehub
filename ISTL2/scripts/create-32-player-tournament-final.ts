@@ -53,11 +53,7 @@ async function create32PlayerTournament() {
       console.log(`✅ Created registration ${i + 1}/32: ${user.name} (${user.email})`);
     }
     
-    // Update tournament with current participants count
-    await prisma.tournament.update({
-      where: { id: tournamentId },
-      data: { currentParticipants: 32 }
-    });
+    // Tournament is ready with 32 participants
     
     console.log('\n🎉 Tournament setup complete!');
     console.log(`🏆 Tournament: Elite Tennis Championship 2025 - 32 Players`);

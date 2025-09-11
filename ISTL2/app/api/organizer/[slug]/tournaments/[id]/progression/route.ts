@@ -467,7 +467,7 @@ async function advanceToNextRound(tournamentId: string, currentRoundName: string
 }
 
 function getNextRoundName(currentRound: string): string | null {
-  const progression: { [key: string]: string } = {
+  const progression: { [key: string]: string | null } = {
     'Round of 32': 'Round of 16',
     'Round of 16': 'Quarterfinal',
     'Quarterfinal': 'Semifinal',

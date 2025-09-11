@@ -83,7 +83,7 @@ async function createNewTournament16() {
           playerEmail: participant.email,
           playerPhone: participant.phone,
           playerAge: participant.age,
-          playerGender: participant.gender,
+          playerGender: participant.gender as 'MALE' | 'FEMALE',
           playerCategory: participant.category,
           paymentStatus: 'SUCCEEDED'
         }

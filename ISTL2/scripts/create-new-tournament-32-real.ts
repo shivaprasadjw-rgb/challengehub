@@ -86,7 +86,7 @@ async function createNewTournament32Real() {
       }
     });
     
-    console.log('✅ Created tournament:', tournament.name);
+    console.log('✅ Created tournament:', tournament.title);
     
     // Real player names for 32 participants
     const realPlayers = [
@@ -154,7 +154,7 @@ async function createNewTournament32Real() {
           playerEmail: player.email,
           playerPhone: player.phone,
           playerAge: player.age,
-          playerGender: player.gender,
+          playerGender: player.gender as 'MALE' | 'FEMALE',
           playerCategory: player.category,
           paymentStatus: 'SUCCEEDED',
           registeredAt: new Date()
@@ -173,7 +173,7 @@ async function createNewTournament32Real() {
     });
     
     console.log('\n🎉 Tournament created successfully!');
-    console.log(`🏆 Tournament: ${tournament.name}`);
+    console.log(`🏆 Tournament: ${tournament.title}`);
     console.log(`👥 Participants: ${realPlayers.length}`);
     console.log(`🏢 Organizer: ${organizerData.name}`);
     console.log(`📍 Venue: ${venue.name}`);

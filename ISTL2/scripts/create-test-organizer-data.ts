@@ -118,7 +118,7 @@ async function createTestOrganizerData() {
           playerEmail: playerData.email,
           playerPhone: '+91-9876543210',
           playerAge: playerData.age,
-          playerGender: playerData.gender,
+          playerGender: playerData.gender as 'MALE' | 'FEMALE',
           playerCategory: playerData.category,
           paymentStatus: 'SUCCEEDED',
           registeredAt: new Date()

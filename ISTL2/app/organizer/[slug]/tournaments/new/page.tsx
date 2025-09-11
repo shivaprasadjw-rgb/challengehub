@@ -32,7 +32,8 @@ export default function CreateTournament() {
     time: '',
     entryFee: '',
     maxParticipants: '32',
-    venueId: ''
+    venueId: '',
+    description: ''
   })
   const [venues, setVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(false)

@@ -123,7 +123,7 @@ async function fixTournamentIssues() {
             playerEmail: player.email,
             playerPhone: player.phone,
             playerAge: player.age,
-            playerGender: player.gender,
+            playerGender: player.gender as 'MALE' | 'FEMALE',
             playerCategory: player.category,
             paymentStatus: 'SUCCEEDED',
             registeredAt: new Date()
@@ -152,11 +152,11 @@ async function fixTournamentIssues() {
     });
     
     console.log('\n🎉 Tournament fixed successfully!');
-    console.log(`🏆 Tournament: ${updatedTournament.title}`);
-    console.log(`📊 Status: ${updatedTournament.status}`);
-    console.log(`👥 Registrations: ${updatedTournament.registrations.length}`);
-    console.log(`🏢 Organizer: ${updatedTournament.organizer.name}`);
-    console.log(`🔗 URL: http://localhost:3000/organizer/${updatedTournament.organizer.slug}/tournaments/${updatedTournament.id}`);
+    console.log(`🏆 Tournament: ${updatedTournament!.title}`);
+    console.log(`📊 Status: ${updatedTournament!.status}`);
+    console.log(`👥 Registrations: ${updatedTournament!.registrations.length}`);
+    console.log(`🏢 Organizer: ${updatedTournament!.organizer.name}`);
+    console.log(`🔗 URL: http://localhost:3000/organizer/${updatedTournament!.organizer.slug}/tournaments/${updatedTournament!.id}`);
     
   } catch (error) {
     console.error('💥 Error fixing tournament:', error);

@@ -30,9 +30,7 @@ async function createEliteTournament() {
         city: 'Mumbai',
         state: 'Maharashtra',
         pincode: '400001',
-        address: '123 Sports Complex, Elite Avenue, Mumbai, Maharashtra 400001',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        address: '123 Sports Complex, Elite Avenue, Mumbai, Maharashtra 400001'
       }
     });
 
@@ -48,9 +46,7 @@ async function createEliteTournament() {
         entryFee: 1500.00,
         maxParticipants: 16,
         status: 'DRAFT',
-        venueId: venue.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        venueId: venue.id
       }
     });
 
@@ -92,9 +88,7 @@ async function createEliteTournament() {
             name: player.name,
             passwordHash: 'playerpass123',
             role: 'PLAYER',
-            status: 'ACTIVE',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            status: 'ACTIVE'
           }
         });
         console.log(`  ✅ Created user: ${player.name}`);
@@ -108,7 +102,7 @@ async function createEliteTournament() {
           playerEmail: player.email,
           playerPhone: player.phone,
           playerAge: player.age,
-          playerGender: player.gender,
+          playerGender: player.gender as 'MALE' | 'FEMALE',
           playerCategory: player.category,
           paymentStatus: 'SUCCEEDED',
           registeredAt: new Date()
@@ -131,13 +125,11 @@ async function createEliteTournament() {
         data: {
           organizerId: organizer.id,
           fullName: judge.name,
-          gender: judge.gender,
+          gender: judge.gender as 'MALE' | 'FEMALE',
           categories: judge.categories,
           phone: judge.phone,
           email: judge.email,
-          bio: `Experienced ${judge.categories.join(', ')} professional`,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          bio: `Experienced ${judge.categories.join(', ')} professional`
         }
       });
       console.log(`  ✅ Created judge: ${judge.name}`);

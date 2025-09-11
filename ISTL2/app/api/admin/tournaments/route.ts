@@ -116,11 +116,12 @@ export async function POST(req: NextRequest) {
     // Log audit
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        actorUserId: session.user.id,
         action: 'CREATE',
-        resourceType: 'TOURNAMENT',
-        resourceId: tournament.id,
-        details: { title: tournament.title, sport: tournament.sport }
+        entityType: 'TOURNAMENT',
+        entityId: tournament.id,
+        tournamentId: tournament.id,
+        meta: { title: tournament.title, sport: tournament.sport }
       }
     });
     
@@ -167,11 +168,12 @@ export async function PUT(req: NextRequest) {
     // Log audit
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        actorUserId: session.user.id,
         action: 'UPDATE',
-        resourceType: 'TOURNAMENT',
-        resourceId: id,
-        details: { title: updated.title, sport: updated.sport }
+        entityType: 'TOURNAMENT',
+        entityId: id,
+        tournamentId: id,
+        meta: { title: updated.title, sport: updated.sport }
       }
     });
     
@@ -201,11 +203,12 @@ export async function DELETE(req: NextRequest) {
     // Log audit
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        actorUserId: session.user.id,
         action: 'DELETE',
-        resourceType: 'TOURNAMENT',
-        resourceId: id,
-        details: { archived: true }
+        entityType: 'TOURNAMENT',
+        entityId: id,
+        tournamentId: id,
+        meta: { archived: true }
       }
     });
     

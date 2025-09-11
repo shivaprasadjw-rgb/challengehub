@@ -69,7 +69,7 @@ async function completeTournamentProgression() {
       console.log('\n🎯 Step 2: Generating Quarterfinal matches...')
       
       // Get winners from Round of 16
-      const round16Winners = round16.matches
+      const round16Winners = round16!.matches
         .filter(m => m.isCompleted && m.winner)
         .map(m => m.winner)
       
@@ -143,6 +143,10 @@ async function completeTournamentProgression() {
       console.log('\n🎯 Step 2: Generating Quarterfinal matches...')
       
       // Get winners from Quarterfinal
+      const quarterfinalMatches = await prisma.match.findMany({
+        where: { roundId: quarterfinalRound!.id }
+      })
+      
       const quarterfinalWinners = quarterfinalMatches
         .filter(m => m.isCompleted && m.winner)
         .map(m => m.winner)
@@ -218,6 +222,10 @@ async function completeTournamentProgression() {
       console.log('\n🎯 Step 6: Generating Final and 3rd Place Match...')
       
       // Get winners from Semifinal for Final
+      const semifinalMatches = await prisma.match.findMany({
+        where: { roundId: semifinalRound!.id }
+      })
+      
       const semifinalWinners = semifinalMatches
         .filter(m => m.isCompleted && m.winner)
         .map(m => m.winner)

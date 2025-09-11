@@ -11,7 +11,7 @@ async function cleanupDuplicateRegistrations() {
     // Get all registrations for this tournament
     const allRegistrations = await prisma.registration.findMany({
       where: { tournamentId: tournamentId },
-      orderBy: { createdAt: 'asc' } // Keep the oldest ones
+      orderBy: { registeredAt: 'asc' } // Keep the oldest ones
     });
     
     console.log(`📊 Found ${allRegistrations.length} total registrations`);

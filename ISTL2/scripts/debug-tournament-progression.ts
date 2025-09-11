@@ -13,13 +13,13 @@ async function debugTournamentProgression() {
       where: { id: tournamentId },
       include: {
         rounds: {
-          orderBy: { roundNumber: 'asc' }
+          orderBy: { order: 'asc' }
         },
         matches: {
           include: {
             round: true
           },
-          orderBy: { matchNumber: 'asc' }
+          orderBy: { id: 'asc' }
         },
         registrations: true
       }
@@ -38,19 +38,19 @@ async function debugTournamentProgression() {
     
     console.log('\n📊 Rounds:');
     tournament.rounds.forEach(round => {
-      console.log(`Round ${round.roundNumber}: ${round.name} - ${round.status}`);
+      console.log(`Round ${round.order}: ${round.name} - ${round.isCompleted ? 'Completed' : 'In Progress'}`);
     });
     
     console.log('\n🏓 Matches:');
     tournament.matches.forEach(match => {
-      console.log(`Match ${match.matchNumber}: ${match.player1Name} vs ${match.player2Name} - ${match.status} - Round: ${match.round.name}`);
+      console.log(`Match ${match.id}: ${match.player1} vs ${match.player2} - ${match.isCompleted ? 'Completed' : 'Pending'} - Round: ${match.round.name}`);
     });
     
     // Check if all matches in current round are completed
-    const currentRound = tournament.rounds.find(r => r.status === 'IN_PROGRESS');
+    const currentRound = tournament.rounds.find(r => !r.isCompleted);
     if (currentRound) {
       const roundMatches = tournament.matches.filter(m => m.roundId === currentRound.id);
-      const completedMatches = roundMatches.filter(m => m.status === 'COMPLETED');
+      const completedMatches = roundMatches.filter(m => m.isCompleted);
       
       console.log(`\n🎯 Current Round Analysis:`);
       console.log(`Round: ${currentRound.name}`);

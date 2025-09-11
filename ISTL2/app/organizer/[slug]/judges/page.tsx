@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, Plus, Users, Edit, Trash2, ArrowLeft, Award } from 'lucide-react'
 import Link from 'next/link'
-import { OrganizerNav } from '@/components/OrganizerNav'
+import OrganizerNav from '@/components/OrganizerNav'
 
 interface Judge {
   id: string

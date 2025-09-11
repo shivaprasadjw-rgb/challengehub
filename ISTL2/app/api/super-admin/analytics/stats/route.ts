@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       totalRegistrations,
       totalOrganizers,
       approvedOrganizers,
-      totalRevenue
+      paidRegistrations
     ] = await Promise.all([
       prisma.tournament.count(),
       prisma.tournament.count({ where: { status: 'ACTIVE' } }),
@@ -31,17 +31,10 @@ export async function GET(req: NextRequest) {
       prisma.organizer.count({ where: { status: 'APPROVED' } }),
       prisma.registration.aggregate({
         where: {
-          paymentStatus: 'SUCCEEDED',
-          tournament: {
-            entryFee: { gt: 0 }
-          }
+          paymentStatus: 'SUCCEEDED'
         },
-        _sum: {
-          tournament: {
-            select: {
-              entryFee: true
-            }
-          }
+        _count: {
+          id: true
         }
       })
     ])
@@ -69,6 +62,7 @@ export async function GET(req: NextRequest) {
         totalRegistrations,
         totalOrganizers,
         approvedOrganizers,
+        paidRegistrations: paidRegistrations._count.id || 0,
         totalRevenue: revenueFromEntryFees._sum.entryFee ? Number(revenueFromEntryFees._sum.entryFee) : 0
       }
     })

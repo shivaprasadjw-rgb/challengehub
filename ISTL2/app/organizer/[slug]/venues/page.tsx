@@ -19,6 +19,8 @@ interface Venue {
   locality: string
   pincode: string
   address: string
+  contactNumber?: string
+  email?: string
 }
 
 export default function OrganizerVenues() {
@@ -38,7 +40,9 @@ export default function OrganizerVenues() {
     state: '',
     locality: '',
     pincode: '',
-    address: ''
+    address: '',
+    contactNumber: '',
+    email: ''
   })
 
   useEffect(() => {
@@ -90,7 +94,9 @@ export default function OrganizerVenues() {
       state: '',
       locality: '',
       pincode: '',
-      address: ''
+      address: '',
+      contactNumber: '',
+      email: ''
     })
     setShowAddForm(false)
     setEditingVenue(null)
@@ -136,7 +142,9 @@ export default function OrganizerVenues() {
       state: venue.state,
       locality: venue.locality,
       pincode: venue.pincode,
-      address: venue.address
+      address: venue.address,
+      contactNumber: '', // contactNumber field doesn't exist in Venue interface
+      email: '' // email field doesn't exist in Venue interface
     })
     setShowAddForm(true)
   }

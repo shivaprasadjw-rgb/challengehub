@@ -44,7 +44,7 @@ async function advanceTournamentRound() {
     
     // Check if Round of 32 is truly completed
     const round32Matches = tournament.matches.filter(m => m.roundId === currentRound.id);
-    const completedMatches = round32Matches.filter(m => m.status === 'COMPLETED');
+    const completedMatches = round32Matches.filter(m => m.isCompleted);
     
     console.log(`🏓 Round of 32 Matches: ${round32Matches.length} total, ${completedMatches.length} completed`);
     
@@ -53,11 +53,9 @@ async function advanceTournamentRound() {
       
       // Generate matches for Round of 16
       const winners = completedMatches.map(match => {
-        // Determine winner based on scores
-        const score1 = parseInt(match.player1Score || '0');
-        const score2 = parseInt(match.player2Score || '0');
-        return score1 > score2 ? match.player1Name : match.player2Name;
-      });
+        // Use winner field directly
+        return match.winner;
+      }).filter(Boolean);
       
       console.log(`�� Winners from Round of 32: ${winners.length}`);
       winners.forEach((winner, index) => {
@@ -72,12 +70,10 @@ async function advanceTournamentRound() {
             data: {
               tournamentId: tournamentId,
               roundId: nextRound.id,
-              player1Name: winners[i],
-              player2Name: winners[i + 1],
-              player1Score: null,
-              player2Score: null,
-              status: 'PENDING',
-              matchNumber: `R16-M${Math.floor(i/2) + 1}`
+              player1: winners[i],
+              player2: winners[i + 1],
+              matchCode: `R16-M${Math.floor(i/2) + 1}`,
+              isCompleted: false
             }
           });
           round16Matches.push(match);

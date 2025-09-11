@@ -12,9 +12,7 @@ async function fixCorruptedTournament() {
     await prisma.tournament.update({
       where: { id: tournamentId },
       data: { 
-        status: 'DRAFT',
-        currentRound: null,
-        progressionData: null
+        status: 'DRAFT'
       }
     });
     console.log('✅ Tournament reset to DRAFT status');

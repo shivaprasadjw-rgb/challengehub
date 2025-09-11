@@ -43,14 +43,14 @@ async function debugTournamentProgressionFixed() {
     
     console.log('\n🏓 Matches:');
     tournament.matches.forEach(match => {
-      console.log(`Match ${match.id}: ${match.player1Name} vs ${match.player2Name} - ${match.status} - Round: ${match.round.name}`);
+      console.log(`Match ${match.id}: ${match.player1} vs ${match.player2} - ${match.isCompleted ? 'Completed' : 'Pending'} - Round: ${match.round.name}`);
     });
     
     // Check if all matches in current round are completed
     const currentRound = tournament.rounds.find(r => !r.isCompleted);
     if (currentRound) {
       const roundMatches = tournament.matches.filter(m => m.roundId === currentRound.id);
-      const completedMatches = roundMatches.filter(m => m.status === 'COMPLETED');
+      const completedMatches = roundMatches.filter(m => m.isCompleted);
       
       console.log(`\n🎯 Current Round Analysis:`);
       console.log(`Round: ${currentRound.name} (Order: ${currentRound.order})`);

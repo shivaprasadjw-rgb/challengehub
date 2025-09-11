@@ -38,7 +38,7 @@ async function fixMembership() {
       }
     });
 
-    console.log('✅ Created new membership:', newMembership.id);
+    console.log('✅ Created new membership for user:', newMembership.userId, 'organizer:', newMembership.organizerId);
     console.log('🎉 Login should now work!');
 
   } catch (error) {

@@ -40,7 +40,7 @@ export async function PUT(
     // Check if membership exists
     const existingMembership = await prisma.userOrganizer.findFirst({
       where: {
-        id: params.id,
+        userId: params.id,
         organizerId: organizer.id
       },
       include: {
@@ -62,7 +62,12 @@ export async function PUT(
 
     // Update membership role
     const updatedMembership = await prisma.userOrganizer.update({
-      where: { id: params.id },
+      where: { 
+        userId_organizerId: {
+          userId: params.id,
+          organizerId: organizer.id
+        }
+      },
       data: { role: role as any },
       include: {
         user: {
@@ -98,14 +103,13 @@ export async function PUT(
     return NextResponse.json({
       message: 'Member role updated successfully',
       member: {
-        id: updatedMembership.id,
         userId: updatedMembership.user.id,
         name: updatedMembership.user.name,
         email: updatedMembership.user.email,
         userRole: updatedMembership.user.role,
         organizerRole: updatedMembership.role,
         status: updatedMembership.user.status,
-        joinedAt: updatedMembership.createdAt
+        joinedAt: updatedMembership.joinedAt
       }
     })
 
@@ -147,7 +151,7 @@ export async function DELETE(
     // Check if membership exists
     const existingMembership = await prisma.userOrganizer.findFirst({
       where: {
-        id: params.id,
+        userId: params.id,
         organizerId: organizer.id
       },
       include: {
@@ -172,7 +176,12 @@ export async function DELETE(
 
     // Delete membership
     await prisma.userOrganizer.delete({
-      where: { id: params.id }
+      where: { 
+        userId_organizerId: {
+          userId: params.id,
+          organizerId: organizer.id
+        }
+      }
     })
 
     // Create audit log

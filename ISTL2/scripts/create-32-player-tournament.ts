@@ -35,16 +35,14 @@ async function create32PlayerTournament() {
           city: 'Mumbai',
           state: 'Maharashtra',
           locality: 'Elite Avenue',
-          address: '123 Elite Avenue, Mumbai, Maharashtra 400001',
-          capacity: 1000,
-          facilities: ['Parking', 'Refreshments', 'Medical Support'],
-          contact: '+91-98765-43210'
+          pincode: '400001',
+          address: '123 Elite Avenue, Mumbai, Maharashtra 400001'
         }
       });
       console.log('✅ Created venue: Elite Sports Complex');
     }
 
-    // Create the tournament (removed currentParticipants field)
+    // Create the tournament
     const tournament = await prisma.tournament.create({
       data: {
         organizerId: organizer.id,
@@ -54,11 +52,7 @@ async function create32PlayerTournament() {
         entryFee: 2000.00,
         maxParticipants: 32,
         status: 'DRAFT',
-        venueId: venue.id,
-        description: 'Elite level tennis tournament with 32 participants. Single elimination format with proper progression system.',
-        registrationDeadline: new Date('2025-01-10T23:59:59Z'),
-        currentRound: null,
-        progressionData: null
+        venueId: venue.id
       }
     });
 
@@ -115,9 +109,7 @@ async function create32PlayerTournament() {
             name: playerNames[i],
             passwordHash: await bcrypt.hash('player123', 10),
             role: 'PLAYER',
-            status: 'ACTIVE',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            status: 'ACTIVE'
           }
         });
         console.log(`✅ Created user: ${playerNames[i]}`);
@@ -127,18 +119,14 @@ async function create32PlayerTournament() {
       const registration = await prisma.registration.create({
         data: {
           tournamentId: tournament.id,
-          userId: user.id,
           playerName: playerNames[i],
           playerEmail: playerEmails[i],
           playerPhone: phoneNumbers[i],
           playerCategory: 'SINGLES',
-          playerSkillLevel: skillLevels[i % 4],
           playerAge: 18 + (i % 20), // Ages 18-37
           playerGender: i % 2 === 0 ? 'MALE' : 'FEMALE',
           paymentStatus: 'SUCCEEDED',
-          registeredAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date()
+          registeredAt: new Date()
         }
       });
 

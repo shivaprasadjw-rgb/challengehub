@@ -74,7 +74,7 @@ async function fixRound16Status() {
     console.log('\n🎯 Step 3: Verifying the fix...')
     
     const updatedRound16 = await prisma.tournamentRound.findUnique({
-      where: { id: round16.id },
+      where: { id: round16!.id },
       include: { matches: true }
     })
     

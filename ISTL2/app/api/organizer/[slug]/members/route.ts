@@ -45,20 +45,19 @@ export async function GET(
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        joinedAt: 'desc'
       }
     })
 
     return NextResponse.json({
       members: members.map(member => ({
-        id: member.id,
         userId: member.user.id,
         name: member.user.name,
         email: member.user.email,
         userRole: member.user.role,
         organizerRole: member.role,
         status: member.user.status,
-        joinedAt: member.createdAt,
+        joinedAt: member.joinedAt,
         lastActive: member.user.createdAt // You can add lastActiveAt field to track this
       }))
     })
@@ -156,11 +155,11 @@ export async function POST(
     // Create audit log
     await prisma.auditLog.create({
       data: {
-        actorUserId: null,
+        actorUserId: session.user.id,
         organizerId: organizer.id,
         action: 'ADD_ORGANIZER_MEMBER',
         entityType: 'UserOrganizer',
-        entityId: membership.id,
+        entityId: user.id,
         meta: {
           memberEmail: user.email,
           memberName: user.name,
@@ -173,14 +172,13 @@ export async function POST(
     return NextResponse.json({
       message: 'Member added successfully',
       member: {
-        id: membership.id,
         userId: membership.user.id,
         name: membership.user.name,
         email: membership.user.email,
         userRole: membership.user.role,
         organizerRole: membership.role,
         status: membership.user.status,
-        joinedAt: membership.createdAt
+        joinedAt: membership.joinedAt
       }
     })
 

@@ -33,9 +33,7 @@ async function fixEliteTournamentForDelete() {
     const updatedTournament = await prisma.tournament.update({
       where: { id: tournament.id },
       data: {
-        status: 'DRAFT',
-        currentRound: null,
-        progressionData: null
+        status: 'DRAFT'
       }
     });
 

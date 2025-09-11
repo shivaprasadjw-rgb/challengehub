@@ -29,12 +29,15 @@ async function fixMatchStatuses() {
     
     // Fix each match status
     for (const match of matches) {
-      if (match.status !== 'COMPLETED') {
+      if (!match.isCompleted) {
         await prisma.match.update({
           where: { id: match.id },
-          data: { status: 'COMPLETED' }
+          data: { 
+            isCompleted: true,
+            completedAt: new Date()
+          }
         });
-        console.log(`✅ Fixed match: ${match.player1Name} vs ${match.player2Name}`);
+        console.log(`✅ Fixed match: ${match.player1} vs ${match.player2}`);
       }
     }
     
@@ -43,7 +46,7 @@ async function fixMatchStatuses() {
       where: { roundId: round32.id }
     });
     
-    const completedCount = updatedMatches.filter(m => m.status === 'COMPLETED').length;
+    const completedCount = updatedMatches.filter(m => m.isCompleted).length;
     console.log(`\n🎉 Status fix complete!`);
     console.log(`✅ ${completedCount}/${updatedMatches.length} matches now marked as COMPLETED`);
     
