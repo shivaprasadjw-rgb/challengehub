@@ -1,0 +1,211 @@
+## 🛠️ **How to Install SQL Tools Extension in Cursor AI**
+
+### **Method 1: Using Cursor AI Extensions Marketplace (Recommended)**
+
+#### **Step 1: Open Extensions View**
+- Press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (Mac)
+- Or click the Extensions icon in the Activity Bar (left sidebar)
+
+#### **Step 2: Search for SQL Extensions**
+For PostgreSQL (which you're using), search for:
+- `PostgreSQL` - Official PostgreSQL extension
+- `SQLTools` - Universal SQL database client
+- `SQLTools PostgreSQL` - PostgreSQL-specific driver
+
+#### **Step 3: Install Recommended Extensions**
+
+**Primary Recommendation: SQLTools**
+1. Search for `SQLTools`
+2. Install **"SQLTools"** by Matheus Teixeira
+3. Install **"SQLTools PostgreSQL/Cockroach Driver"** by Matheus Teixeira
+
+**Alternative: PostgreSQL Extension**
+1. Search for `PostgreSQL`
+2. Install **"PostgreSQL"** by Chris Kolkman
+
+### **Method 2: Manual Installation (If Marketplace Issues)**
+
+#### **Step 1: Download Extension Files**
+1. Go to [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/)
+2. Search for your desired extension
+3. Click "Download Extension" to get the `.vsix` file
+
+#### **Step 2: Install from VSIX**
+1. In Cursor AI, open Extensions view (`Ctrl+Shift+X`)
+2. Click the "..." menu (three dots)
+3. Select "Install from VSIX..."
+4. Choose the downloaded `.vsix` file
+
+### **Method 3: Command Line Installation**
+
+#### **Using Cursor AI Command Palette**
+1. Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
+2. Type "Extensions: Install Extensions"
+3. Search for your desired SQL extension
+4. Click Install
+
+---
+
+## 🎯 **Recommended Extensions for Your Project**
+
+### **1. SQLTools (Primary Choice)**
+- **Extension ID**: `mtxr.sqltools`
+- **Features**:
+  - Connect to multiple database types
+  - Query execution
+  - Database explorer
+  - IntelliSense
+  - Query history
+
+### **2. SQLTools PostgreSQL Driver**
+- **Extension ID**: `mtxr.sqltools-driver-pg`
+- **Features**:
+  - PostgreSQL-specific features
+  - Connection management
+  - Schema browsing
+
+### **3. PostgreSQL (Alternative)**
+- **Extension ID**: `ms-ossdata.vscode-postgresql`
+- **Features**:
+  - PostgreSQL connection
+  - Query execution
+  - Database management
+
+---
+
+## 🔧 **Setup Database Connection**
+
+### **After Installing SQLTools:**
+
+#### **Step 1: Open SQLTools**
+1. Click the SQLTools icon in Activity Bar
+2. Or press `Ctrl+Shift+P` and type "SQLTools"
+
+#### **Step 2: Add New Connection**
+1. Click "Add New Connection"
+2. Select "PostgreSQL"
+3. Fill in connection details:
+
+```json
+{
+  "name": "Sports India Database",
+  "driver": "PostgreSQL",
+  "server": "localhost",
+  "port": 5432,
+  "database": "sports_india",
+  "username": "postgres",
+  "password": "your_password"
+}
+```
+
+#### **Step 3: Test Connection**
+1. Click "Test Connection"
+2. If successful, click "Save Connection"
+
+---
+
+## 🚀 **Quick Setup Commands**
+
+### **Install via Command Line (if available)**
+```bash
+# Install SQLTools
+code --install-extension mtxr.sqltools
+
+# Install PostgreSQL driver
+code --install-extension mtxr.sqltools-driver-pg
+```
+
+### **Verify Installation**
+```bash
+# List installed extensions
+code --list-extensions | grep -i sql
+```
+
+---
+
+## 🔍 **Troubleshooting**
+
+### **If Extensions Don't Appear:**
+1. **Check Marketplace Settings**:
+   - Go to Settings (`Ctrl+,`)
+   - Search for "marketplace"
+   - Ensure marketplace is enabled
+
+2. **Restart Cursor AI**:
+   - Close and reopen Cursor AI
+   - Try installing again
+
+3. **Check Internet Connection**:
+   - Ensure stable internet connection
+   - Try refreshing the extensions view
+
+### **If Installation Fails:**
+1. **Clear Extension Cache**:
+   - Close Cursor AI
+   - Delete extension cache folder
+   - Restart and try again
+
+2. **Manual Download**:
+   - Download `.vsix` file from marketplace
+   - Install from VSIX option
+
+---
+
+## 📋 **Post-Installation Setup**
+
+### **1. Configure Database Connection**
+```json
+{
+  "sqltools.connections": [
+    {
+      "name": "Local Development",
+      "driver": "PostgreSQL",
+      "server": "localhost",
+      "port": 5432,
+      "database": "sports_india",
+      "username": "postgres",
+      "password": "your_password"
+    }
+  ]
+}
+```
+
+### **2. Test Connection**
+- Right-click on connection
+- Select "Test Connection"
+- Verify successful connection
+
+### **3. Explore Database**
+- Expand connection to see tables
+- Right-click tables to view data
+- Use query editor for SQL commands
+
+---
+
+## 🎯 **Benefits for Your Project**
+
+### **With SQLTools Installed:**
+1. **Direct Database Access** - Connect to your PostgreSQL database
+2. **Query Execution** - Run SQL commands directly in Cursor AI
+3. **Schema Exploration** - Browse tables, views, and relationships
+4. **Data Visualization** - View and edit table data
+5. **Query History** - Keep track of executed queries
+6. **IntelliSense** - Auto-completion for SQL commands
+
+### **Perfect for Your Use Case:**
+- **Database Management** - Manage your sports tournament database
+- **Data Cleaning** - Execute cleanup scripts directly
+- **Schema Updates** - Apply Prisma migrations
+- **Data Verification** - Check data integrity after operations
+
+---
+
+## 🚀 **Next Steps**
+
+1. **Install SQLTools extension**
+2. **Configure database connection**
+3. **Test connection to your PostgreSQL database**
+4. **Explore your database schema**
+5. **Use for database management tasks**
+
+**This will give you powerful database management capabilities directly within Cursor AI!** 🎯
