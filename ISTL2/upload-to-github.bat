@@ -1,11 +1,11 @@
 @echo off
 :: === GitHub Upload Script ===
-:: This script will upload "vercel-ready-with-setup.zip" 
-:: to your GitHub repo: https://github.com/shivaprasadjw-rgb/vercel-ready-with-setup.git
+:: This script will upload "challengehub" 
+:: to your GitHub repo: https://github.com/shivaprasadjw-rgb/challengehub.git
 
-set ZIPFILE=vercel-ready-with-setup.zip
-set REPOURL=https://github.com/shivaprasadjw-rgb/vercel-ready-with-setup.git
-set PROJECTFOLDER=vercel-ready-with-setup
+set ZIPFILE=challengehub
+set REPOURL=https://github.com/shivaprasadjw-rgb/challengehub.git
+set PROJECTFOLDER=challengehub
 
 :: Unzip file
 echo 🔄 Extracting %ZIPFILE%...

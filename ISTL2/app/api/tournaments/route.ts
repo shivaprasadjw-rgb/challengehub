@@ -5,25 +5,79 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const tournaments = await prisma.tournament.findMany({
-      where: {
-        status: {
-          in: ['ACTIVE', 'COMPLETED']
-        }
-      },
-      include: {
-        organizer: true,
-        venue: true,
-        registrations: {
-          select: {
-            id: true
+    // First try with Prisma ORM
+    let tournaments;
+    try {
+      tournaments = await prisma.tournament.findMany({
+        where: {
+          status: {
+            in: ['ACTIVE', 'COMPLETED']
           }
+        },
+        include: {
+          organizer: true,
+          venue: true,
+          registrations: {
+            select: {
+              id: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+      });
+    } catch (enumError) {
+      console.log('⚠️ Prisma enum error, falling back to raw SQL:', enumError);
+      
+      // Fallback to raw SQL if enum issue occurs
+      const rawTournaments = await prisma.$queryRaw`
+        SELECT 
+          t.id, t.title, t.sport, t.date, t."entryFee", t."maxParticipants", 
+          t.status, t."venueId", t."currentRound", t."progressionData",
+          t."createdAt", t."updatedAt",
+          o.name as organizer_name, o.contact as organizer_contact,
+          v.name as venue_name, v.locality, v.city, v.state, v.pincode, v.address,
+          COUNT(r.id) as registration_count
+        FROM tournaments t
+        LEFT JOIN organizers o ON t."organizerId" = o.id
+        LEFT JOIN venues v ON t."venueId" = v.id
+        LEFT JOIN registrations r ON t.id = r."tournamentId"
+        WHERE t.status IN ('ACTIVE', 'COMPLETED')
+        GROUP BY t.id, o.id, v.id
+        ORDER BY t."createdAt" DESC
+      `;
+      
+      // Transform raw data to match Prisma format
+      tournaments = (rawTournaments as any[]).map(row => ({
+        id: row.id,
+        title: row.title,
+        sport: row.sport,
+        date: row.date,
+        entryFee: row.entryFee,
+        maxParticipants: row.maxParticipants,
+        status: row.status,
+        venueId: row.venueId,
+        currentRound: row.currentRound,
+        progressionData: row.progressionData,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        organizer: {
+          name: row.organizer_name,
+          contact: row.organizer_contact
+        },
+        venue: row.venue_name ? {
+          id: row.venueId,
+          name: row.venue_name,
+          locality: row.locality,
+          city: row.city,
+          state: row.state,
+          pincode: row.pincode,
+          address: row.address
+        } : null,
+        registrations: Array.from({ length: parseInt(row.registration_count) }, (_, i) => ({ id: `${row.id}-${i}` }))
+      }));
+    }
 
     // Transform Prisma data to match the expected format
     const transformedTournaments = tournaments.map(tournament => ({
