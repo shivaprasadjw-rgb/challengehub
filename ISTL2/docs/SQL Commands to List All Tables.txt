@@ -1,0 +1,87 @@
+Here's the SQL command to see all tables in your ISTL2 database:
+
+## 📋 **SQL Commands to List All Tables**
+
+### **Method 1: List All Tables**
+```sql
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public';
+
+### **Method 1a: List All Tables**
+
+SELECT 
+    t.table_name,
+    t.table_type,
+    COALESCE(c.column_count, 0) as column_count,
+    COALESCE(pg_size_pretty(pg_total_relation_size(quote_ident(t.table_name))), '0 bytes') as table_size
+FROM information_schema.tables t
+LEFT JOIN (
+    SELECT 
+        table_name,
+        COUNT(*) as column_count
+    FROM information_schema.columns 
+    WHERE table_schema = 'public'
+    GROUP BY table_name
+) c ON t.table_name = c.table_name
+WHERE t.table_schema = 'public'
+ORDER BY t.table_name;
+```
+
+### **Method 2: List Tables with More Details**
+```sql
+SELECT 
+    table_name,
+    table_type
+FROM information_schema.tables 
+WHERE table_schema = 'public'
+ORDER BY table_name;
+```
+
+### **Method 3: List Tables with Row Counts**
+```sql
+SELECT 
+    schemaname,
+    tablename,
+    n_tup_ins as "rows"
+FROM pg_stat_user_tables
+ORDER BY tablename;
+```
+
+### **Method 4: Simple Command (PostgreSQL specific)**
+```sql
+\dt
+```
+
+## 🎯 **For Your ISTL2 Database**
+
+Since you mentioned "ISTL2 database", try this in SQLTools:
+
+1. **Update your connection settings:**
+   - Connection name: "ISTL2 Database"
+   - Server: "localhost"
+   - Port: "5432"
+   - Database: **`istl2`** (instead of sports_india)
+   - Username: "postgres"
+   - Password: try `postgres` or leave empty
+
+2. **Test the connection**
+
+3. **Once connected, run:**
+   ```sql
+   SELECT table_name 
+   FROM information_schema.tables 
+   WHERE table_schema = 'public';
+   ```
+
+## 🔍 **Alternative Database Names to Try**
+
+If `istl2` doesn't work, try these common database names:
+- `istl2`
+- `sports_india`
+- `badminton_tournaments`
+- `postgres` (default database)
+- `development`
+- `dev`
+
+**Try connecting to the `istl2` database first, and if that works, run the SQL command to see all your tables!** 🚀
