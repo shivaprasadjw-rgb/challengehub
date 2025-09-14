@@ -281,7 +281,7 @@ export default function RegistrationForm() {
             <option value="">Select Tournament</option>
             {tournamentsBySport.map(t => (
               <option key={t.id} value={t.id}>
-                {t.name} - {t.venue.city} ({t.id})
+                {t.name} - {t.venue ? t.venue.city : 'Venue TBD'} ({t.id})
               </option>
             ))}
           </select>
@@ -386,7 +386,7 @@ export default function RegistrationForm() {
       {selectedTournament && (
         <div className="rounded border border-slate-200 p-3 text-sm bg-slate-50">
           <div className="font-medium">Selected: {selectedTournament.name} ({selectedTournament.id})</div>
-          <div>Sport: {selectedTournament.sport} • Venue: {selectedTournament.venue.name}, {selectedTournament.venue.city}</div>
+          <div>Sport: {selectedTournament.sport} • Venue: {selectedTournament.venue ? `${selectedTournament.venue.name}, ${selectedTournament.venue.city}` : 'Venue TBD'}</div>
           <div>Entry Fee: ₹{selectedTournament.entryFee} • Deadline: {selectedTournament.registrationDeadline}</div>
           <div className="mt-2 font-medium">
             Capacity: {capacityLoading ? "Loading..." : `${currentCapacity} / 32 participants`}

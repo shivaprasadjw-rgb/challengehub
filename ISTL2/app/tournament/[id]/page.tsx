@@ -65,25 +65,21 @@ export default function TournamentPage({ params }: { params: { id: string } }) {
         setLoading(true);
         console.log('Fetching tournament with ID:', params.id);
         
-        const response = await fetch(`/api/tournaments`);
+        const response = await fetch(`/api/tournaments/${params.id}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch tournaments');
+          throw new Error('Failed to fetch tournament');
         }
         
         const data = await response.json();
         console.log('API response:', data);
         
         if (!data.success) {
-          throw new Error(data.error || 'Failed to fetch tournaments');
+          throw new Error(data.error || 'Failed to fetch tournament');
         }
         
-        const foundTournament = data.tournaments.find((t: Tournament) => {
-          const match = t.id.toUpperCase() === params.id.toUpperCase();
-          console.log(`Comparing ${t.id} with ${params.id}: ${match}`);
-          return match;
-        });
-        
+        const foundTournament = data.tournament;
         console.log('Found tournament:', foundTournament);
+        console.log('Setting tournament state...');
         
         if (!foundTournament) {
           // Fallback: try to find in static data
@@ -105,7 +101,7 @@ export default function TournamentPage({ params }: { params: { id: string } }) {
             // Set related tournaments from static data
             const related = staticTournaments
               .filter(t => 
-                (t.venue.city === staticTournament.venue.city || t.sport === staticTournament.sport) && 
+                ((t.venue && staticTournament.venue && t.venue.city === staticTournament.venue.city) || t.sport === staticTournament.sport) && 
                 t.id !== staticTournament.id
               )
               .slice(0, 4)
@@ -128,7 +124,9 @@ export default function TournamentPage({ params }: { params: { id: string } }) {
           ...foundTournament,
           schedule: foundTournament.schedule || []
         };
+        console.log('Setting tournament with schedule:', tournamentWithSchedule);
         setTournament(tournamentWithSchedule);
+        console.log('Tournament state set successfully');
         
         // Fetch tournament progression data for all tournaments (public access)
         try {
@@ -143,18 +141,28 @@ export default function TournamentPage({ params }: { params: { id: string } }) {
           console.log('Progression data not available:', progError);
         }
         
-        // Set related tournaments
-        const related = data.tournaments
-          .filter((t: Tournament) => 
-            (t.venue.city === foundTournament.venue.city || t.sport === foundTournament.sport) && 
-            t.id !== foundTournament.id
-          )
-          .slice(0, 4)
-          .map((t: Tournament) => ({
-            ...t,
-            formattedDate: t.date ? format(new Date(t.date), 'd MMMM, yyyy') : 'Date TBD'
-          }));
-        setRelatedTournaments(related);
+        // Set related tournaments - fetch all tournaments to find related ones
+        try {
+          const relatedResponse = await fetch('/api/tournaments');
+          if (relatedResponse.ok) {
+            const relatedData = await relatedResponse.json();
+            if (relatedData.success) {
+              const related = relatedData.tournaments
+                .filter((t: Tournament) => 
+                  ((t.venue && foundTournament.venue && t.venue.city === foundTournament.venue.city) || t.sport === foundTournament.sport) && 
+                  t.id !== foundTournament.id
+                )
+                .slice(0, 4)
+                .map((t: Tournament) => ({
+                  ...t,
+                  formattedDate: t.date ? format(new Date(t.date), 'd MMMM, yyyy') : 'Date TBD'
+                }));
+              setRelatedTournaments(related);
+            }
+          }
+        } catch (relatedError) {
+          console.log('Could not fetch related tournaments:', relatedError);
+        }
         
       } catch (err) {
         console.error('Error fetching tournament:', err);

@@ -40,7 +40,7 @@ export default function FeaturedTournaments({ tournaments }: { tournaments: Tour
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{tournament.name}</h3>
             
             <div className="text-sm text-gray-600 mb-4 space-y-1">
-              <p>📍 {tournament.venue.city}, {tournament.venue.state}</p>
+              <p>📍 {tournament.venue ? `${tournament.venue.city}, ${tournament.venue.state}` : 'Venue TBD'}</p>
               <p>📅 {mounted ? new Date(tournament.date!).toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 

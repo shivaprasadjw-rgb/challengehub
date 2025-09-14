@@ -54,7 +54,7 @@ export default function SearchBar() {
           type: 'tournament',
           id: tournament.id,
           name: tournament.name,
-          display: `${tournament.name} (${tournament.sport}) - ${tournament.venue.city}`
+          display: `${tournament.name} (${tournament.sport}) - ${tournament.venue ? tournament.venue.city : 'Venue TBD'}`
         });
       }
     });

@@ -31,7 +31,7 @@ export default function CalendarList({ tournaments }: { tournaments: Tournament[
         {tournaments.map(t => (
           <div key={t.id} className="card p-4">
             <div className="font-medium">{t.name}</div>
-            <div className="text-xs text-slate-600">{t.venue.name}, {t.venue.city}</div>
+            <div className="text-xs text-slate-600">{t.venue ? `${t.venue.name}, ${t.venue.city}` : 'Venue TBD'}</div>
           </div>
         ))}
       </div>
@@ -48,7 +48,7 @@ export default function CalendarList({ tournaments }: { tournaments: Tournament[
               <div key={t.id} className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{t.name}</p>
-                  <p className="text-xs text-slate-600">{t.venue.name}, {t.venue.city}</p>
+                  <p className="text-xs text-slate-600">{t.venue ? `${t.venue.name}, ${t.venue.city}` : 'Venue TBD'}</p>
                 </div>
                 <Link className="text-sm text-primary hover:underline" href={`/tournament/${t.id}`}>Details</Link>
               </div>

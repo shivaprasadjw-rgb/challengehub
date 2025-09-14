@@ -11,8 +11,8 @@ export type Venue = {
 
 export type Organizer = {
   name: string;
-  phone: string;
-  email: string;
+  phone: string | null;
+  email: string | null;
 };
 
 export type MatchSlot = {
@@ -53,11 +53,11 @@ export type Tournament = {
   sport: string;
   format: string;
   category: string;
-  entryFee: number;
+  entryFee: number | string;
   registrationDeadline?: string;
   maxParticipants: number;
   organizer: Organizer;
-  venue: Venue;
+  venue: Venue | null;
   scheduleNote?: string;
   schedule: MatchSlot[];
   prizes: string[];

@@ -46,8 +46,8 @@ function TournamentsContent() {
 
   // Filter tournaments based on search params
   const filteredTournaments = tournaments.filter(tournament => {
-    if (selectedState && tournament.venue.state !== selectedState) return false;
-    if (selectedCity && tournament.venue.city !== selectedCity) return false;
+    if (selectedState && tournament.venue && tournament.venue.state !== selectedState) return false;
+    if (selectedCity && tournament.venue && tournament.venue.city !== selectedCity) return false;
     if (selectedSport && tournament.sport !== selectedSport) return false;
     return true;
   });

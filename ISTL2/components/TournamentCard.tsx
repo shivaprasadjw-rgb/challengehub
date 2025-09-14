@@ -45,7 +45,7 @@ export default function TournamentCard({ tournament }: { tournament: Tournament 
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{tournament.name}</h3>
         
         <div className="text-sm text-gray-600 mb-4 space-y-1">
-          <p>📍 {tournament.venue.city}, {tournament.venue.state}</p>
+          <p>📍 {tournament.venue ? `${tournament.venue.city}, ${tournament.venue.state}` : 'Venue TBD'}</p>
           <p>📅 {tournament.date ? formatDate(tournament.date) : "Date will be announced upon completion of registration."}</p>
           <p>💰 Entry Fee: ₹{tournament.entryFee}</p>
           <p>👥 Max Participants: {tournament.maxParticipants}</p>
