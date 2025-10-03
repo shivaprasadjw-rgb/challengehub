@@ -1,9 +1,9 @@
 @echo off
 :: === GitHub Upload Script ===
-:: This script will upload "challengehub" 
+:: This script will upload "challengehub.zip" 
 :: to your GitHub repo: https://github.com/shivaprasadjw-rgb/challengehub.git
 
-set ZIPFILE=challengehub
+set ZIPFILE=challengehub.zip
 set REPOURL=https://github.com/shivaprasadjw-rgb/challengehub.git
 set PROJECTFOLDER=challengehub
 
